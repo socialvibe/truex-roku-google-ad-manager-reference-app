@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2019 true[X], Inc. All rights reserved. -->
+
+<!--
+    MainScene
+
+    Controls Channel UX by hosting, coordinating, and transitioning between Flow's.
+
+    Handles loading the True[X] library, presenting LoadingFlow when long operations are running, transitioning
+    between DetailsFlow and ContentFlow, and notifying users of errors with ErrorFlow.
+-->
+<component
+    name="MainScene"
+    extends="Scene"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs"/>
+    <script type="text/brightscript" uri="pkg:/source/GlobalUtils.brs"/>
+
+    <children>
+        <!-- ***** IMPORTANT ***** -->
+        <!--
+        The TruexAdRenderer library should be a Node on your launch Scene so it gets loaded ASAP.
+        See MainScene::init() to get an idea of the library loading process.
+        -->
+        <!-- ***** IMPORTANT ***** -->
+        <ComponentLibrary
+            id="TruexAdRendererLib"
+            uri="http://development.scratch.truex.com.s3.amazonaws.com/roku/simon/TruexAdRenderer-1.0.0.pkg"/>
+        <!-- TODO: update uri to something more permanent -->
+
+        <!-- Used as parent layout for all Flow's. -->
+        <Group
+            id="rootLayout"/>
+
+    </children>
+</component>
