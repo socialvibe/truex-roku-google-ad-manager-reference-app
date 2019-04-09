@@ -38,7 +38,7 @@ end function
 '--------------------------------------------------------------------------------------------------
 sub onPlayButtonSelected()
     ? "DetailsFlow::onPlayButtonSelected()"
-    m.top.event = {trigger: "playButtonSelected"}
+    m.top.event = { trigger: "playButtonSelected", details: "TODO: pass selected content data" }
 end sub
 
 '------------------------------------------------------------------------------------------------------------------

@@ -17,5 +17,6 @@
         <field id="streamData" type="assocarray"/>
         <field id="streamManagerReady" type="boolean"/>
         <field id="currentAdBreak" type="assocarray"/>
+        <field id="userCancelStream" type="boolean"/>
     </interface>
 </component>

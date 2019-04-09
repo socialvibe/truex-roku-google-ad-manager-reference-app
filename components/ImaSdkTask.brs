@@ -72,11 +72,11 @@ sub onTruexEvent(event as Object)
         ' [7]
         '
 
-        ' If the user earned credit (via "adFreePod") their content will already be seeked past the ad break
-        ' If the user has not earned credit their content will resume at the beginning of the ad break
+        ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
+        ' if the user has not earned credit their content will resume at the beginning of the ad break
         m.top.video.control = "play"
     else if data.type = "adError" then
-        ' TODO: There was a problem loading the True[X] ad, resume playback with default video ads
+        ' there was a problem loading the True[X] ad, resume playback with default video ads
         m.top.video.control = "play"
     else if data.type = "noAdsAvailable" then
         ' there are no True[X] ads available for the user to engage with, resume playback with default video ads
@@ -85,7 +85,7 @@ sub onTruexEvent(event as Object)
         '
         ' [8]
         '
-        ' TODO: go back to DetailsFlow
+        m.top.userCancelStream = true
     end if
 end sub
 
@@ -219,10 +219,10 @@ sub loadStream()
             m.streamManager = m.sdk.GetStreamManager()
         end while
 
-        if m.streamManager["type"] <> invalid or m.streamManager["type"] = "error" then
+        if m.streamManager.type <> invalid or m.streamManager.type = "error" then
             errors = CreateObject("roArray", 1, true)
-            ? "TRUE[X] >>> ImaSdkTask::loadStream() - error ";m.streamManager["info"]
-            errors.push(m.streamManager["info"])
+            ? "TRUE[X] >>> ImaSdkTask::loadStream() - error ";m.streamManager.info
+            errors.push(m.streamManager.info)
             m.top.errors = errors
         else
             addCallbacks()

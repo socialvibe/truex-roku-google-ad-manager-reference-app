@@ -75,7 +75,6 @@ sub onTruexLibraryLoadStatusChanged(event as Object)
         ? "TRUE[X] >>> TruexAdRendererLib failed to load"
 
         ' present the DetailsFlow, streams should use standard ads since the Truex library couldn't be loaded
-        ' TODO: should make it obvious in the UI that the library did not load/is not being used
         showFlow("DetailsFlow")
     else
         ' should not occur

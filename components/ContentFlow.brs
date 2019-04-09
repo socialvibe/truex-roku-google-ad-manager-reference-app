@@ -82,6 +82,18 @@ sub onSdkLoadErrors(event as Object)
     ' TODO: recover?
 end sub
 
+'------------------------------------------------------------------------------------
+' Called when the user intends to cancel the media stream.
+'
+' Params:
+'   * event as roAssociativeArray - contains value of m.sdkLoadTask.userCancelStream
+'------------------------------------------------------------------------------------
+sub onUserCancelStreamRequested(event as Object)
+    data = event.GetData()
+    ? "ContentFlow::onUserCancelStreamRequested(cancelStream=";data;")"
+    m.top.event = { trigger: "cancelStream" }
+end sub
+
 '----------------------------------------------------------------------
 ' Starts the ImaSdkTask task, which loads and initializes the IMA SDK.
 '----------------------------------------------------------------------
@@ -93,6 +105,7 @@ sub loadImaSdk()
     m.sdkLoadTask.ObserveField("errors", "onSdkLoadErrors")
     m.sdkLoadTask.ObserveField("urlData", "onUrlLoadRequested")
     m.sdkLoadTask.ObserveField("adPlaying", "onAdBreak")
+    m.sdkLoadTask.ObserveField("userCancelStream", "onUserCancelStreamRequested")
     m.sdkLoadTask.streamData = m.streamData
     m.sdkLoadTask.video = m.videoPlayer
     m.sdkLoadTask.control = "run"
