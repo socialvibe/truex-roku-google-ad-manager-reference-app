@@ -43,6 +43,8 @@ sub onFlowEvent(event as Object)
     data = event.GetData()
     if data.trigger = "playButtonSelected" then
         showFlow("ContentFlow")
+    else if data.trigger = "cancelStream" then
+        showFlow("DetailsFlow")
     end if
 end sub
 
