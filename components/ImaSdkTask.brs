@@ -63,7 +63,8 @@ sub onTruexEvent(event as Object)
         ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
         m.top.video.position = m.top.currentAdBreak.timeOffset + m.top.currentAdBreak.duration
     else if data.type = "adFetchCompleted" then
-        ' TODO: start the renderer
+        ' now the True[X] engagement is ready to start
+        m.adRenderer.action = { type: "start" }
     else if data.type = "optOut" then
         ' user decided not to engage in True[X] ad, resume playback with default video ads
         m.top.video.control = "play"
@@ -149,12 +150,12 @@ sub onStreamStarted(ad as Object)
         '
 
         ' instantiate the True[X] renderer and register an event listener
-        adRenderer = m.top.CreateChild("TruexLibrary:TruexAdRenderer")
-        adRenderer.ObserveField("event", "onTruexEvent")
+        m.adRenderer = m.top.CreateChild("TruexLibrary:TruexAdRenderer")
+        m.adRenderer.ObserveField("event", "onTruexEvent")
 
         ' use the companion ad data to initialize the True[X] renderer
         ' TODO: remove creativeURL
-        adRenderer.action = {
+        m.adRenderer.action = {
             type: "init",
             creativeURL: "temporary creativeURL",
             adParameters: {
@@ -164,9 +165,6 @@ sub onStreamStarted(ad as Object)
             supportsCancelStream: true,
             slotType: getCurrentAdBreakSlotType()
         }
-
-        ' now the True[X] engagement is ready to start
-        adRenderer.action = { type: "start" }
     end if
 end sub
 
