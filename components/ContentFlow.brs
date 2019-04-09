@@ -2,7 +2,7 @@
 '---------------------------------------------------------------------------------------------
 ' ContentFlow
 '---------------------------------------------------------------------------------------------
-' Uses the IMA SDK to initialize and play the media stream.
+' Uses the IMA SDK to initialize and play a media stream.
 '
 ' Member Variables:
 '   * videoPlayer as Video - the video player that plays the content stream
@@ -12,9 +12,9 @@
 sub init()
     ? "ContentFlow::init()"
 
-    m.rootLayout = m.top.FindNode("contentFlowLayout")
     m.videoPlayer = m.top.FindNode("videoPlayer")
 
+    ' define the test stream
     m.streamData = {
         title: "true[X] -- 22 Minute Stream",
         contentSourceId: "2494430",
@@ -32,48 +32,54 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     return true
 end function
 
-'-----------------------------------------------------------------------
-' Called when content stream requests a URL.
+'------------------------------------------------------------------------------------------------------------
+' Called when content stream requests a URL to be loaded. The 'manifest' field of the new value of 'urlData'
+' is used to point the video player to a new content stream.
 '
 ' Params:
-'   * message as Object -
-'-----------------------------------------------------------------------
-sub onUrlLoadRequested(message as Object)
-    ? "ContentFlow::onUrlLoadRequested(data=";FormatJson(message.GetData());")"
+'   * event as roAssociativeArray - should contain a 'manifest' field
+'------------------------------------------------------------------------------------------------------------
+sub onUrlLoadRequested(event as Object)
+    data = event.GetData()
+    if data = invalid then return else ? "ContentFlow::onUrlLoadRequested(data=";FormatJson(data);")"
 
-    data = message.GetData()
-    playStream(data.manifest)
+    ' verify that 'manifest' exists on 'data' before updating the video stream
+    if data.DoesExist("manifest") then playStream(data.manifest) else ? "No manifest field, ignoring urlData update."
 end sub
 
-'-----------------------------------------------------------------------
-' Called when an Ad break begins or ends.
+'--------------------------------------------------------------------------------------------------------
+' Triggered when m.sdkLoadTask.adPlaying gets updated. This signals the beginning or end of an ad break.
 '
 ' Params:
-'   * event as Object -
-'-----------------------------------------------------------------------
+'   * event as roAssociativeArray - contains the new (Boolean) value of m.sdkLoadTask.adPlaying
+'--------------------------------------------------------------------------------------------------------
 sub onAdBreak(event as Object)
-    ? "ContentFlow::onAdBreak()"
-    if m.sdkLoadTask.adPlaying then ? "> > > Ad Break Started" else ? "> > > Ad Break Ended"
+    data = event.GetData()
+    ? "ContentFlow::onAdBreak(adPlaying=";data;")"
+    if data <> invalid and data = true then ? "> > > Ad Break Started" else ? "> > > Ad Break Ended"
 end sub
 
-'-----------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------
 ' Called when the IMA SDK has finished loading.
 '
 ' Params:
-'   * message as Object -
-'-----------------------------------------------------------------------
-sub onImaSdkLoaded(message as Object)
-    ? "ContentFlow::onImaSdkLoaded()"
+'   * event as roAssociativeArray - contains the new (Boolean) value of m.sdkLoadTask.sdkLoaded
+'-----------------------------------------------------------------------------------------------
+sub onImaSdkLoaded(event as Object)
+    data = event.GetData()
+    ? "ContentFlow::onImaSdkLoaded(sdkLoaded=";data;")"
 end sub
 
-'-----------------------------------------------------------------------
-' Called when the IMA SDK encounters an error while loading.
+'----------------------------------------------------------------------
+' Called when the IMA SDK encounters an error(s) while loading.
 '
 ' Params:
-'   * message as Object -
-'-----------------------------------------------------------------------
-sub onImageSdkLoadError(message as Object)
-    ? "ContentFlow::onImageSdkLoadError()"
+'   * event as roAssociativeArray - contains an array of error strings
+'----------------------------------------------------------------------
+sub onSdkLoadErrors(event as Object)
+    data = event.GetData()
+    ? "ContentFlow::onSdkLoadErrors(errors=";data;")"
+    ' TODO: recover?
 end sub
 
 '----------------------------------------------------------------------
@@ -82,15 +88,12 @@ end sub
 sub loadImaSdk()
     ? "ContentFlow::loadImaSdk()"
 
-    selectedStream = m.streamData
-    m.videoTitle = selectedStream.title
-
     m.sdkLoadTask = CreateObject("roSGNode", "ImaSdkTask")
     m.sdkLoadTask.ObserveField("sdkLoaded", "onImaSdkLoaded")
-    m.sdkLoadTask.ObserveField("errors", "onImageSdkLoadError")
+    m.sdkLoadTask.ObserveField("errors", "onSdkLoadErrors")
     m.sdkLoadTask.ObserveField("urlData", "onUrlLoadRequested")
     m.sdkLoadTask.ObserveField("adPlaying", "onAdBreak")
-    m.sdkLoadTask.streamData = selectedStream
+    m.sdkLoadTask.streamData = m.streamData
     m.sdkLoadTask.video = m.videoPlayer
     m.sdkLoadTask.control = "run"
 end sub
@@ -106,7 +109,7 @@ sub playStream(url as String)
 
     videoContent = CreateObject("roSGNode", "ContentNode")
     videoContent.url = url
-    videoContent.title = m.videoTitle
+    videoContent.title = m.streamData.title
     videoContent.streamFormat = "hls"
     videoContent.playStart = 0
 
