@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2019 true[X], Inc. All rights reserved. -->
+
+<component name="FetchStreamInfoTask" extends="Task">
+    <script type="text/brightscript" uri="pkg:/components/FetchStreamInfoTask.brs"/>
+
+    <interface>
+      <field id="uri" type="uri"/>
+      <field id="streamInfo" type="string" alwaysNotify="true"/>
+      <field id="error" type="string" alwaysNotify="true"/>
+    </interface>
+</component>
