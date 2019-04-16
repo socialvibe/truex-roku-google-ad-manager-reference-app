@@ -158,7 +158,7 @@ sub onStreamStarted(ad as Object)
             type: "init",
             creativeURL: "temporary creativeURL",
             adParameters: {
-                vast_config_url: decodedData.vast_config_url,
+                vast_config_url: determineVastConfigUrl(decodedData.vast_config_url, decodedData.user_id),
                 placement_hash: decodedData.placement_hash
             },
             supportsCancelStream: true,
@@ -187,6 +187,16 @@ end sub
 sub onStreamError(ad as Object)
     ? "TRUE[X] >>> ImaSdkTask::onStreamError()"
 end sub
+
+function determineVastConfigUrl(baseUrl as String, userId as String) as String
+    ? "ImaSdkTask::determineVastConfigUrl(baseUrl=";baseUrl;", userId=";userId;")"
+    baseUrl = baseUrl + "&network_user_id=" + userId
+    if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
+    baseUrl = baseUrl + "&stream_position=" + getCurrentAdBreakSlotType()
+    baseUrl = baseUrl + "&env%5B%5D=brightscript"
+    ? "VAST_CONFIG_URL=";baseUrl
+    return baseUrl
+end function
 
 '---------------------------------------------------------------------------------------
 ' Uses m.top.streamData to initialize and request a content stream through the IMA SDK.
