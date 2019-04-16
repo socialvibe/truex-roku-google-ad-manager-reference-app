@@ -64,7 +64,6 @@ sub onTruexEvent(event as Object)
         m.top.video.position = m.top.currentAdBreak.timeOffset + m.top.currentAdBreak.duration
     else if data.type = "adFetchCompleted" then
         ' now the True[X] engagement is ready to start
-        m.adRenderer.action = { type: "start" }
     else if data.type = "optOut" then
         ' user decided not to engage in True[X] ad, resume playback with default video ads
         m.top.video.control = "play"
@@ -133,7 +132,7 @@ sub onStreamStarted(ad as Object)
         ' decodedData template = {
         '       user_id: "string",
         '       placement_hash: "string",
-        '       vase_config_url: "string"
+        '       vast_config_url: "string"
         ' }
 
         '
@@ -163,8 +162,9 @@ sub onStreamStarted(ad as Object)
                 placement_hash: decodedData.placement_hash
             },
             supportsCancelStream: true,
-            slotType: getCurrentAdBreakSlotType()
+            slotType: UCase(getCurrentAdBreakSlotType())
         }
+        m.adRenderer.action = { type: "start" }
     end if
 end sub
 
@@ -276,11 +276,11 @@ end sub
 ' Determines the current ad break's (m.top.currentAdBreak) slot type.
 '
 ' Return:
-'   either "MIDROLL" or "PREROLL", invalid if m.currentAdBreak is not set
+'   either "midroll" or "preroll", invalid if m.currentAdBreak is not set
 '-------------------------------------------------------------------------
 function getCurrentAdBreakSlotType() as Dynamic
     if m.top.currentAdBreak = invalid then return invalid
-    if m.top.currentAdBreak.podindex > 0 then return "MIDROLL" else return "PREROLL"
+    if m.top.currentAdBreak.podindex > 0 then return "midroll" else return "preroll"
 end function
 
 '------------------------------------------------------------------------------------

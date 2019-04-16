@@ -12,13 +12,16 @@
 sub init()
     ? "ContentFlow::init()"
 
+    if m.global.streamInfo = invalid then return
+
     m.videoPlayer = m.top.FindNode("videoPlayer")
 
     ' define the test stream
+    jsonStreamInfo = ParseJson(m.global.streamInfo)[0]
     m.streamData = {
-        title: "true[X] -- 22 Minute Stream",
-        contentSourceId: "2494430",
-        videoId: "googleio-highlights",
+        title: jsonStreamInfo.title,
+        contentSourceId: jsonStreamInfo.google_content_id,
+        videoId: jsonStreamInfo.google_video_id,
         apiKey: "",
         type: "vod"
     }

@@ -45,6 +45,9 @@ sub onFlowEvent(event as Object)
         showFlow("ContentFlow")
     else if data.trigger = "cancelStream" then
         showFlow("DetailsFlow")
+    else if data.trigger = "streamInfoReceived" then
+        ensureGlobalStreamInfoField(data.streamInfo)
+        if m.tarLibrary.loadStatus = "ready" or m.tarLibrary.loadStatus = "failed" then showFlow("DetailsFlow")
     end if
 end sub
 
@@ -70,12 +73,12 @@ sub onTruexLibraryLoadStatusChanged(event as Object)
         ? "TRUE[X] >>> TruexAdRendererLib has been loaded successfully!"
 
         ' present the DetailsFlow now that the Truex library is ready
-        showFlow("DetailsFlow")
+        if m.global.streamInfo <> invalid then showFlow("DetailsFlow")
     else if m.tarLibrary.loadStatus = "failed" then
         ? "TRUE[X] >>> TruexAdRendererLib failed to load"
 
         ' present the DetailsFlow, streams should use standard ads since the Truex library couldn't be loaded
-        showFlow("DetailsFlow")
+        if m.global.streamInfo <> invalid then showFlow("DetailsFlow")
     else
         ' should not occur
         ? "TRUE[X] >>> TruexAdRendererLib loadStatus unrecognized, ignoring"

@@ -16,6 +16,8 @@ sub init()
     m.spinner = m.top.FindNode("busySpinner")
     m.spinner.poster.uri = m.top.spinnerImageUri
     m.spinner.poster.ObserveField("loadStatus", "onSpinnerLoadStatusChanged")
+
+    fetchStreamInfo()
 end sub
 
 '---------------------------------------------------------------------------------
@@ -25,6 +27,27 @@ sub onSpinnerLoadStatusChanged()
     if m.spinner = invalid then return
     ? "TRUE[X] >>> LoadingFlow::onSpinnerLoadStatusChanged(loadStatus=";m.spinner.poster.loadStatus;")"
     if m.spinner.poster.loadStatus = "ready" or m.spinner.poster.loadStatus = "failed" then centerLayout()
+end sub
+
+sub onStreamInfo(event as Object)
+    if m.fetchStreamTask.streamInfo <> invalid then
+        m.top.event = {
+            trigger: "streamInfoReceived",
+            streamInfo: m.fetchStreamTask.streamInfo
+        }
+    else
+        m.top.error = "Failed to fetch stream info."
+    end if
+end sub
+
+sub fetchStreamInfo()
+    ? "LoadingFlow::fetchStreamInfo()"
+    if m.fetchStreamTask = invalid then
+        m.fetchStreamTask = CreateObject("roSGNode", "FetchStreamInfoTask")
+        m.fetchStreamTask.ObserveField("streamInfo", "onStreamInfo")
+        m.fetchStreamTask.uri = "https://stash.truex.com/reference-apps/roku/config/reference-app-streams.json"
+        m.fetchStreamTask.control = "run"
+    end if
 end sub
 
 '--------------------------------------------------------------------------------

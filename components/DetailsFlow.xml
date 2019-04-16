@@ -104,7 +104,7 @@
                     layoutDirection="horiz"
                     itemSpacings="[124,63,63,63,63,63,63,63,63,63,63]">
 
-                    <Rectangle
+                    <Poster
                         id="episode1"
                         width="302"
                         height="453"

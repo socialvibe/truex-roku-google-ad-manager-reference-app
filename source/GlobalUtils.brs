@@ -35,7 +35,12 @@ end sub
 '   * height=1920 as Integer - value to use for m.global.channelHeight
 '-----------------------------------------------------------------------------------------------------
 sub ensureGlobalChannelResolutionField(width=1920 as Integer, height=1080 as Integer)
-    if not m.global.hasField("channelWidth") then m.global.addFields({ channelWidth: width, channelHeight: height })
+    if not m.global.HasField("channelWidth") then m.global.AddFields({ channelWidth: width, channelHeight: height })
     m.global.channelWidth = width
     m.global.channelHeight = height
+end sub
+
+sub ensureGlobalStreamInfoField(streamInfo=invalid as String)
+    if not m.global.HasField("streamInfo") then m.global.AddFields({ streamInfo: streamInfo })
+    m.global.streamInfo = streamInfo
 end sub

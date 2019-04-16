@@ -55,7 +55,7 @@ Once we have the ad parameter JSON object, we can initialize the true[X] ad rend
 for events by observing its `event` field. Once the renderer is done initializing, it will update
 its `event` field to an `roAssociativeArray` with a `type: adFetchCompleted` field.
 
-## [6] - Respond to onAdFreePod
+## [6] - Respond to adFreePod
 
 If the user fulfills the requirements to earn true[ATTENTION], an event of `type: adFreePod`
 will be triggered. We respond by seeking the underlying stream over the

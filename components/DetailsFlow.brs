@@ -25,6 +25,15 @@ sub init()
     m.imagesLoaded = 0
     m.top.FindNode("backgroundImage").ObserveField("loadStatus", "onImageLoaded")
     m.top.FindNode("backgroundImage2").ObserveField("loadStatus", "onImageLoaded")
+
+    if m.global.streamInfo = invalid then return
+    streamInfo = ParseJson(m.global.streamInfo)[0]
+    streamTitle = streamInfo.title
+    if streamTitle <> invalid then m.top.FindNode("detailsFlowTitle").text = streamTitle
+    streamDesc = streamInfo.description
+    if streamDesc <> invalid then m.top.FindNode("detailsFlowDescription").text = streamDesc
+    streamCover = streamInfo.cover
+    if streamCover <> invalid then m.top.FindNode("episode1").uri = streamCover
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
