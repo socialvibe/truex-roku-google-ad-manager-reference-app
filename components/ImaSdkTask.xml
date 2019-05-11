@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2019 true[X], Inc. All rights reserved. -->
+
+<component
+    name="ImaSdkTask"
+    extends="Task">
+
+    <script type="text/brightscript" uri="pkg:/components/ImaSdkTask.brs"/>
+
+    <interface>
+        <field id="sdkLoaded" type="boolean"/>
+        <field id="errors" type="stringarray"/>
+        <field id="urlData" type="assocarray"/>
+        <field id="adPlaying" type="boolean"/>
+        <field id="video" type="node"/>
+        <field id="bookmark" type="integer"/>
+        <field id="streamData" type="assocarray"/>
+        <field id="streamManagerReady" type="boolean"/>
+        <field id="currentAdBreak" type="assocarray"/>
+        <field id="userCancelStream" type="boolean"/>
+        <field id="payload" type="assocarray"/>
+    </interface>
+</component>

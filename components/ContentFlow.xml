@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2019 true[X], Inc. All rights reserved. -->
+
+<!--
+    ContentFlow
+
+    UX which contains the video player that is used to play the media stream.
+-->
+<component
+    name="ContentFlow"
+    extends="Group">
+
+    <script
+        type="text/brightscript"
+        uri="pkg:/components/ContentFlow.brs"/>
+
+    <children>
+        <Group
+            id="contentFlowLayout">
+
+            <Video
+              id="videoPlayer"
+              notificationInterval="1"/>
+
+        </Group>
+    </children>
+</component>

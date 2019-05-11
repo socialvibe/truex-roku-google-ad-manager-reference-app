@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2019 true[X], Inc. All rights reserved. -->
+
+<!--
+    BaseFlow
+
+    Encapsulate common Flow functionality.
+-->
+<component
+    name="BaseFlow"
+    extends="Group">
+
+    <interface>
+        <!-- Observable field for bubbling events from Flow's to MainScene (which orchestrates Flow's) -->
+        <field id="event" type="assocarray"/>
+    </interface>
+
+    <children/>
+</component>
