@@ -18,5 +18,6 @@
         <field id="streamManagerReady" type="boolean"/>
         <field id="currentAdBreak" type="assocarray"/>
         <field id="userCancelStream" type="boolean"/>
+        <field id="payload" type="assocarray"/>
     </interface>
 </component>

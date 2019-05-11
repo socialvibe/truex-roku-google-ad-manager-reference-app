@@ -41,7 +41,6 @@ sub runLoop()
         ' continue running task until video is no longer available
         if m.top.video = invalid then exit while
 
-        ? "TRUE[X] >>> ImaSdkTask::runLoop() - msg=";msg
         m.streamManager.onMessage(msg)
 
         ' toggle trick play
@@ -62,6 +61,8 @@ sub onTruexEvent(event as Object)
 
         ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
         m.top.video.position = m.top.currentAdBreak.timeOffset + m.top.currentAdBreak.duration
+    else if data.type = "adStarted" then
+        m.top.video.control = "pause"
     else if data.type = "adFetchCompleted" then
         ' now the True[X] engagement is ready to start
     else if data.type = "optOut" then
@@ -142,29 +143,15 @@ sub onStreamStarted(ad as Object)
         ' pause the stream, which is currently playing a video ad
         m.top.video.control = "pause"
         ' seek past the True[X] placeholder video ad
-        m.top.video.position = m.top.video.position + ad.duration
+        m.top.video.seek = m.top.video.position + ad.duration
 
         '
         ' [5]
         '
 
         ' instantiate the True[X] renderer and register an event listener
-        m.adRenderer = m.top.CreateChild("TruexLibrary:TruexAdRenderer")
-        m.adRenderer.ObserveField("event", "onTruexEvent")
-
-        ' use the companion ad data to initialize the True[X] renderer
-        ' TODO: remove creativeURL
-        m.adRenderer.action = {
-            type: "init",
-            creativeURL: "temporary creativeURL",
-            adParameters: {
-                vast_config_url: determineVastConfigUrl(decodedData.vast_config_url, decodedData.user_id),
-                placement_hash: decodedData.placement_hash
-            },
-            supportsCancelStream: true,
-            slotType: UCase(getCurrentAdBreakSlotType())
-        }
-        m.adRenderer.action = { type: "start" }
+        decodedData.currentAdBreak = m.top.currentAdBreak
+        m.top.payload = decodedData
     end if
 end sub
 
@@ -194,6 +181,7 @@ function determineVastConfigUrl(baseUrl as String, userId as String) as String
     if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
     baseUrl = baseUrl + "&stream_position=" + getCurrentAdBreakSlotType()
     baseUrl = baseUrl + "&env%5B%5D=brightscript"
+    baseUrl = baseUrl + "&env%5B%5D=layoutJSON"
     ? "VAST_CONFIG_URL=";baseUrl
     return baseUrl
 end function

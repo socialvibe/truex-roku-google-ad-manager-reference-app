@@ -108,11 +108,90 @@ sub loadImaSdk()
     m.sdkLoadTask.ObserveField("errors", "onSdkLoadErrors")
     m.sdkLoadTask.ObserveField("urlData", "onUrlLoadRequested")
     m.sdkLoadTask.ObserveField("adPlaying", "onAdBreak")
+    m.sdkLoadTask.ObserveFieldScoped("payload", "onPayload")
     m.sdkLoadTask.ObserveField("userCancelStream", "onUserCancelStreamRequested")
     m.sdkLoadTask.streamData = m.streamData
     m.sdkLoadTask.video = m.videoPlayer
     m.sdkLoadTask.control = "run"
 end sub
+
+sub onTruexEvent(event as object)
+    data = event.GetData()
+    if data = invalid then return
+    ? "TRUE[X] >>> ImaSdkTask::onTruexEvent(event=";data;")"
+
+    if data.type = "adFreePod" then
+        '
+        ' [6]
+        '
+
+        ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
+        m.videoPlayer.seek = m.currentAdBreak.timeOffset + m.currentAdBreak.duration
+    else if data.type = "adStarted" then
+        m.videoPlayer.control = "pause"
+    else if data.type = "adFetchCompleted" then
+        ' now the True[X] engagement is ready to start
+    else if data.type = "optOut" then
+        ' user decided not to engage in True[X] ad, resume playback with default video ads
+        m.videoPlayer.control = "play"
+    else if data.type = "adCompleted" then
+        '
+        ' [7]
+        '
+
+        ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
+        ' if the user has not earned credit their content will resume at the beginning of the ad break
+        m.adRenderer.visible = false
+        m.adRenderer.SetFocus(false)
+        m.videoPlayer.control = "play"
+    else if data.type = "adError" then
+        ' there was a problem loading the True[X] ad, resume playback with default video ads
+        m.videoPlayer.control = "play"
+    else if data.type = "noAdsAvailable" then
+        ' there are no True[X] ads available for the user to engage with, resume playback with default video ads
+        m.videoPlayer.control = "play"
+    else if data.type = "cancelStream" then
+        '
+        ' [8]
+        '
+        m.top.event = { trigger: "cancelStream" }
+    end if
+end sub
+
+sub onPayload()
+    decodedData = m.sdkLoadTask.payload
+    if decodedData = invalid then return
+    m.currentAdBreak = decodedData.currentAdBreak
+    m.adRenderer = m.top.CreateChild("TruexLibrary:TruexAdRenderer")
+    m.adRenderer.observeFieldScoped("event", "onTruexEvent")
+
+    ' use the companion ad data to initialize the True[X] renderer
+    ' TODO: remove creativeURL
+    m.adRenderer.action = {
+        type: "init",
+        creativeURL: "temporary creativeURL",
+        adParameters: {
+            vast_config_url: determineVastConfigUrl(decodedData.vast_config_url, decodedData.user_id),
+            placement_hash: decodedData.placement_hash
+        },
+        supportsCancelStream: true,
+        slotType: "PREROLL"'UCase(getCurrentAdBreakSlotType())
+    }
+    m.adRenderer.action = { type: "start" }
+    m.adRenderer.focusable = true
+    m.adRenderer.SetFocus(true)
+end sub
+
+function determineVastConfigUrl(baseUrl as string, userId as string) as string
+    ? "ImaSdkTask::determineVastConfigUrl(baseUrl=";baseUrl;", userId=";userId;")"
+    baseUrl = baseUrl + "&network_user_id=" + userId
+    if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
+    baseUrl = baseUrl + "&stream_position=" + "preroll"'getCurrentAdBreakSlotType()
+    baseUrl = baseUrl + "&env%5B%5D=brightscript"
+    baseUrl = baseUrl + "&env%5B%5D=layoutJSON"
+    ? "VAST_CONFIG_URL=";baseUrl
+    return baseUrl
+end function
 
 '----------------------------------------------------------------------
 ' Starts the ImaSdkTask task, which loads and initializes the IMA SDK.

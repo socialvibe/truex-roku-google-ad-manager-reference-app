@@ -27,7 +27,7 @@
         <!-- ***** IMPORTANT ***** -->
         <ComponentLibrary
             id="TruexAdRendererLib"
-            uri="http://development.scratch.truex.com.s3.amazonaws.com/roku/simon/TruexAdRenderer-1.0.0.pkg"/>
+            uri="http://development.scratch.truex.com.s3.amazonaws.com/roku/TruexAdRenderer-Roku-v1.pkg"/>
         <!-- TODO: update uri to something more permanent -->
 
         <!-- Used as parent layout for all Flow's. -->
