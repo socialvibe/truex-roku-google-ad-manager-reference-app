@@ -2,14 +2,15 @@
 '-----------------------------------------------------------------------------------------------------------
 ' ContentFlow
 '-----------------------------------------------------------------------------------------------------------
-' Uses the IMA SDK to initialize and play a video stream.
+' Uses the IMA SDK to initialize and play a video stream with dynamic ad insertion (DAI).
 '
-' Expects m.global.streamInfo to exist with the necessary video stream information.
+' NOTE: Expects m.global.streamInfo to exist with the necessary video stream information.
 '
 ' Member Variables:
 '   * videoPlayer as Video - the video player that plays the content stream
 '   * streamData as roAssociativeArray - information used by the IMA SDK to request the stream
 '   * currentAdBreak as roAssociativeArray - information about the ongoing ad break, provided by ImaSdkTask
+'   * sdkLoadTask as ImaSdkTask - relays ad information between Channel and Google's IMA DAI SDK
 '   * adRenderer as TruexAdRenderer - instance of the true[X] renderer, used to present true[X] ads
 '-----------------------------------------------------------------------------------------------------------
 
@@ -45,7 +46,7 @@ sub onUrlLoadRequested(event as Object)
     data = event.GetData()
     if data = invalid then return else ? "ContentFlow::onUrlLoadRequested(data=";FormatJson(data);")"
 
-    ' verify that 'manifest' exists on 'data' before updating the video stream
+    ' the manifest field contains the URL of the video stream
     if data.DoesExist("manifest") then playStream(data.manifest) else ? "No manifest field, ignoring urlData update."
 end sub
 
@@ -96,13 +97,32 @@ sub onUserCancelStreamRequested(event as Object)
     m.top.event = { trigger: "cancelStream" }
 end sub
 
+'------------------------------------------------------------------------------------------------
+' Callback triggered when TruexAdRenderer updates its 'event' field.
+'
+' The following event types are supported:
+'   * adFreePod - user has met engagement requirements, skips past remaining pod ads
+'   * adStarted - user has started their ad engagement
+'   * adFetchCompleted - TruexAdRenderer received ad fetch response
+'   * optOut - user has opted out of true[X] engagement, show standard ads
+'   * adCompleted - user has finished the true[X] engagement, resume the video stream
+'   * adError - TruexAdRenderer encountered an error presenting the ad, resume with standard ads
+'   * noAdsAvailable - TruexAdRenderer has no ads ready to present, resume with standard ads
+'   * cancelStream - user has requested the video stream be stopped
+'
+' Params:
+'   * event as roAssociativeArray - contains the TruexAdRenderer event data
+'------------------------------------------------------------------------------------------------
 sub onTruexEvent(event as object)
     ? "TRUE[X] >>> ContentFlow::onTruexEvent()"
 
     data = event.getData()
-    if data = invalid then return else ? "TRUE[X] >>> ContentFlow::onTruexEvent(event=";data;")"
+    if data = invalid then return else ? "TRUE[X] >>> ContentFlow::onTruexEvent(eventData=";data;")"
 
     if data.type = "adFreePod" then
+        ' this event is triggered when a user has completed all the true[X] engagement criteria
+        ' this entails interacting with the true[X] ad and viewing it for X seconds (usually 30s)
+
         '
         ' [6]
         '
@@ -110,17 +130,21 @@ sub onTruexEvent(event as object)
         ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
         m.videoPlayer.seek = m.currentAdBreak.timeOffset + m.currentAdBreak.duration
     else if data.type = "adStarted" then
+        ' this event is triggered when a true[X] engagement as started
+        ' that means the user was presented with a Choice Card and opted into an interactive ad
         m.videoPlayer.control = "pause"
     else if data.type = "adFetchCompleted" then
-        ' now the True[X] engagement is ready to start
+        ' this event is triggered when TruexAdRenderer receives a response to an ad fetch request
     else if data.type = "optOut" then
-        ' user decided not to engage in True[X] ad, resume playback with default video ads
+        ' this event is triggered when a user decides not to view a true[X] interactive ad
+        ' that means the user was presented with a Choice Card and opted to watch standard video ads
         m.videoPlayer.control = "play"
     else if data.type = "adCompleted" then
+        ' this event is triggered when TruexAdRenderer is done presenting the ad
+
         '
         ' [7]
         '
-        ? "TRUE[X] >>> ContentFlow::onTruexEvent() - user requested video stream playback cancel..."
 
         ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
         ' if the user has not earned credit their content will resume at the beginning of the ad break
@@ -128,15 +152,24 @@ sub onTruexEvent(event as object)
         m.adRenderer.SetFocus(false)
         m.videoPlayer.control = "play"
     else if data.type = "adError" then
-        ' there was a problem loading the True[X] ad, resume playback with default video ads
+        ' this event is triggered whenever TruexAdRenderer encounters an error
+        ' usually this means the video stream should continue with normal video ads
         m.videoPlayer.control = "play"
     else if data.type = "noAdsAvailable" then
-        ' there are no True[X] ads available for the user to engage with, resume playback with default video ads
+        ' this event is triggered when TruexAdRenderer receives no usable true[X] ad in the ad fetch response
+        ' usually this means the video stream should continue with normal video ads
         m.videoPlayer.control = "play"
     else if data.type = "cancelStream" then
+        ' this event is triggered when the user performs an action interpreted as a request to end the video playback
+        ' this event can be disabled by adding supportsUserCancelStream=false to the TruexAdRenderer init payload
+        ' there are two circumstances where this occurs:
+        '   1. The user was presented with a Choice Card and presses Back
+        '   2. The user has earned an adFreePod and presses Back to exit engagement instead of Watch Your Show button
+
         '
         ' [8]
         '
+
         ? "TRUE[X] >>> ContentFlow::onTruexEvent() - user requested video stream playback cancel..."
         m.top.event = { trigger: "cancelStream" }
     end if
@@ -185,7 +218,7 @@ sub onTruexAdDataReceived(event as object)
             vast_config_url: determineVastConfigUrl(decodedData.vast_config_url, decodedData.user_id),
             placement_hash: decodedData.placement_hash
         },
-        supportsCancelStream: true,
+        supportsCancelStream: true, ' enables cancelStream event types, disable if Channel does not support
         slotType: UCase(getCurrentAdBreakSlotType())
     }
     ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - initializing TruexAdRenderer with action=";tarInitAction
