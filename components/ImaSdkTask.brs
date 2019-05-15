@@ -56,47 +56,6 @@ sub runLoop()
     ? "TRUE[X] >>> Exiting ImaSdkTask::runLoop()"
 end sub
 
-sub onTruexEvent(event as Object)
-    data = event.GetData()
-    if data = invalid then return
-    ? "TRUE[X] >>> ImaSdkTask::onTruexEvent(event=";data;")"
-
-    if data.type = "adFreePod" then
-        '
-        ' [6]
-        '
-
-        ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
-        m.top.video.position = m.top.currentAdBreak.timeOffset + m.top.currentAdBreak.duration
-    else if data.type = "adStarted" then
-        m.top.video.control = "pause"
-    else if data.type = "adFetchCompleted" then
-        ' now the True[X] engagement is ready to start
-    else if data.type = "optOut" then
-        ' user decided not to engage in True[X] ad, resume playback with default video ads
-        m.top.video.control = "play"
-    else if data.type = "adCompleted" then
-        '
-        ' [7]
-        '
-
-        ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
-        ' if the user has not earned credit their content will resume at the beginning of the ad break
-        m.top.video.control = "play"
-    else if data.type = "adError" then
-        ' there was a problem loading the True[X] ad, resume playback with default video ads
-        m.top.video.control = "play"
-    else if data.type = "noAdsAvailable" then
-        ' there are no True[X] ads available for the user to engage with, resume playback with default video ads
-        m.top.video.control = "play"
-    else if data.type = "cancelStream" then
-        '
-        ' [8]
-        '
-        m.top.userCancelStream = true
-    end if
-end sub
-
 ' expected ad template = {
 '     adbreakinfo: {},
 '     addescription: "string",
