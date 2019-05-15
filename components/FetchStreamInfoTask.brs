@@ -1,12 +1,17 @@
 ' Copyright (c) 2019 true[X], Inc. All rights reserved.
+'-----------------------------------------------------------------------------
+' FetchStreamInfoTask
+'-----------------------------------------------------------------------------
+' Background task that requests video stream information from a provided URI.
+'-----------------------------------------------------------------------------
 
 sub init()
-    ? "FetchStreamInfoTask::init()"
+    ? "TRUE[X] >>> FetchStreamInfoTask::init()"
     m.top.functionName = "requestStreamInfo"
 end sub
 
 sub requestStreamInfo()
-    ? "FetchStreamInfoTask::requestStreamInfo()"
+    ? "TRUE[X] >>> FetchStreamInfoTask::requestStreamInfo()"
 
     m.port = CreateObject("roMessagePort")
     httpRequest = CreateObject("roUrlTransfer")
@@ -29,7 +34,7 @@ sub requestStreamInfo()
             if jsonResponse = invalid then
                 m.top.error = "Unrecognized response format, expected JSON object...response=" + response
             else
-                ? "Stream info received, jsonResponse="; jsonResponse
+                ? "TRUE[X] >>> Stream info received, jsonResponse=";jsonResponse
                 m.top.streamInfo = response
             end if
         else

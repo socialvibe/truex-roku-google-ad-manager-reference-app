@@ -8,15 +8,34 @@
     <script type="text/brightscript" uri="pkg:/components/ImaSdkTask.brs"/>
 
     <interface>
-        <field id="sdkLoaded" type="boolean"/>
-        <field id="errors" type="stringarray"/>
-        <field id="urlData" type="assocarray"/>
-        <field id="adPlaying" type="boolean"/>
+        <!-- Video player provided by parent. -->
         <field id="video" type="node"/>
-        <field id="bookmark" type="integer"/>
+
+        <!-- Information about the video stream provided by parent. -->
         <field id="streamData" type="assocarray"/>
+
+        <!-- Flag set to signal that the video stream is ready. -->
         <field id="streamManagerReady" type="boolean"/>
+
+        <!-- Set to true when the IMA SDK is instantiated via New_IMASDK(). -->
+        <field id="sdkLoaded" type="boolean"/>
+
+        <!-- Error strings appended as task runs. -->
+        <field id="errors" type="stringarray"/>
+
+        <!-- Associative array with 'manifest' field that contains stream-requested video URL. -->
+        <field id="urlData" type="assocarray"/>
+
+        <!-- Set to true between start and end of ad breaks. -->
+        <field id="adPlaying" type="boolean"/>
+
+        <!-- Cached video position to return to when resuming video stream. -->
+        <field id="bookmark" type="integer"/>
+
+        <!-- Updated with the latest ad data at the beginning of an ad break. -->
         <field id="currentAdBreak" type="assocarray"/>
+
+        <!-- Set when user requests that the video stream be cancelled. Usually by pressing back at the Choice Card. -->
         <field id="userCancelStream" type="boolean"/>
         <field id="payload" type="assocarray"/>
     </interface>
