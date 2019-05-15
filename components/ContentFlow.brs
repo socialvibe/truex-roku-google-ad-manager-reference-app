@@ -16,18 +16,9 @@
 sub init()
     ? "TRUE[X] >>> ContentFlow::init()"
 
-    if m.global.streamInfo = invalid then return
+    ' streamInfo must be provided by the global node before instantiating ContentFlow
+    if not unpackStreamInformation() then return
 
-
-    ' define the test stream
-    jsonStreamInfo = ParseJson(m.global.streamInfo)[0]
-    m.streamData = {
-        title: jsonStreamInfo.title,
-        contentSourceId: jsonStreamInfo.google_content_id,
-        videoId: jsonStreamInfo.google_video_id,
-        apiKey: "",
-        type: "vod"
-    }
     ' get reference to video player
     m.videoPlayer = m.top.findNode("videoPlayer")
 
@@ -105,24 +96,6 @@ sub onUserCancelStreamRequested(event as Object)
     m.top.event = { trigger: "cancelStream" }
 end sub
 
-'----------------------------------------------------------------------
-' Starts the ImaSdkTask task, which loads and initializes the IMA SDK.
-'----------------------------------------------------------------------
-sub loadImaSdk()
-    ? "ContentFlow::loadImaSdk()"
-
-    m.sdkLoadTask = CreateObject("roSGNode", "ImaSdkTask")
-    m.sdkLoadTask.ObserveField("sdkLoaded", "onImaSdkLoaded")
-    m.sdkLoadTask.ObserveField("errors", "onSdkLoadErrors")
-    m.sdkLoadTask.ObserveField("urlData", "onUrlLoadRequested")
-    m.sdkLoadTask.ObserveField("adPlaying", "onAdBreak")
-    m.sdkLoadTask.ObserveFieldScoped("payload", "onPayload")
-    m.sdkLoadTask.ObserveField("userCancelStream", "onUserCancelStreamRequested")
-    m.sdkLoadTask.streamData = m.streamData
-    m.sdkLoadTask.video = m.videoPlayer
-    m.sdkLoadTask.control = "run"
-end sub
-
 sub onTruexEvent(event as object)
     ? "TRUE[X] >>> ContentFlow::onTruexEvent()"
 
@@ -169,18 +142,45 @@ sub onTruexEvent(event as object)
     end if
 end sub
 
-sub onPayload()
-    decodedData = m.sdkLoadTask.payload
+'--------------------------------------------------------------------------------------------------------
+' Callback triggered when ImaSdbTask updates its 'truexAdData' field. The following fields are expected:
+'   * currentAdBreak as roAssociativeArray - current ad break information, including duration
+'   * user_id as string - the identifier used as the network_user_id parameter in the VAST config URL
+'   * vast_config_url as string - the base URL used to request the VAST config
+'   * placement_hash as string - the ad placement's hash value
+'
+' Params:
+'   * event as roAssociativeArray - contains the updated value of ImaSdkTask.truexAdData
+'--------------------------------------------------------------------------------------------------------
+sub onTruexAdDataReceived(event as object)
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived()"
+
+    decodedData = event.getData()
     if decodedData = invalid then return
+
+    '
+    ' [4]
+    '
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - seeking video position past placeholder ad and pausing..."
+
+    ' pause the stream, which is currently playing a video ad
+    m.videoPlayer.control = "pause"
+    ' seek past the True[X] placeholder video ad
+    m.videoPlayer.seek = m.videoPlayer.position + decodedData.currentAdBreak.duration
     m.currentAdBreak = decodedData.currentAdBreak
-    m.adRenderer = m.top.CreateChild("TruexLibrary:TruexAdRenderer")
+
+    '
+    ' [5]
+    '
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - instantiating TruexAdRenderer ComponentLibrary..."
+
+    ' instantiate TruexAdRenderer and register for event updates
+    m.adRenderer = m.top.createChild("TruexLibrary:TruexAdRenderer")
     m.adRenderer.observeFieldScoped("event", "onTruexEvent")
 
-    ' use the companion ad data to initialize the True[X] renderer
-    ' TODO: remove creativeURL
-    m.adRenderer.action = {
+    ' use the companion ad data to initialize the true[X] renderer
+    tarInitAction = {
         type: "init",
-        creativeURL: "temporary creativeURL",
         adParameters: {
             vast_config_url: determineVastConfigUrl(decodedData.vast_config_url, decodedData.user_id),
             placement_hash: decodedData.placement_hash
@@ -188,10 +188,47 @@ sub onPayload()
         supportsCancelStream: true,
         slotType: UCase(getCurrentAdBreakSlotType())
     }
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - initializing TruexAdRenderer with action=";tarInitAction
+    m.adRenderer.action = tarInitAction
+
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - starting TruexAdRenderer..."
     m.adRenderer.action = { type: "start" }
     m.adRenderer.focusable = true
     m.adRenderer.SetFocus(true)
 end sub
+
+'----------------------------------------------------------------------------------
+' Constructs m.streamData from stream information provided at m.global.streamInfo.
+'
+' Return:
+'   false if there was an error unpacking m.global.streamInfo, otherwise true
+'----------------------------------------------------------------------------------
+function unpackStreamInformation() as boolean
+    if m.global.streamInfo = invalid then
+        ? "TRUE[X] >>> ContentFlow::unpackStreamInformation() - invalid m.global.streamInfo, must be provided..."
+        return false
+    end if
+
+    ' extract stream info JSON into associative array
+    ? "TRUE[X] >>> ContentFlow::unpackStreamInformation() - parsing m.global.streamInfo=";m.global.streamInfo;"..."
+    jsonStreamInfo = ParseJson(m.global.streamInfo)[0]
+    if jsonStreamInfo = invalid then
+        ? "TRUE[X] >>> ContentFlow::unpackStreamInformation() - could not parse streamInfo as JSON, aborting..."
+        return false
+    end if
+
+    ' define the test stream
+    m.streamData = {
+        title: jsonStreamInfo.title,
+        contentSourceId: jsonStreamInfo.google_content_id,
+        videoId: jsonStreamInfo.google_video_id,
+        apiKey: "",
+        type: "vod"
+    }
+    ? "TRUE[X] >>> ContentFlow::unpackStreamInformation() - streamData=";m.streamData
+
+    return true
+end function
 
 '-------------------------------------------------------------------------------------------------------------
 ' Determines the URL string used to request a VAST config. The full URL is created by appending the following
@@ -236,10 +273,30 @@ end function
 
 '----------------------------------------------------------------------
 ' Starts the ImaSdkTask task, which loads and initializes the IMA SDK.
+'----------------------------------------------------------------------
+sub loadImaSdk()
+    ? "TRUE[X] >>> ContentFlow::loadImaSdk()"
+
+    m.sdkLoadTask = createObject("roSGNode", "ImaSdkTask")
+    m.sdkLoadTask.observeField("sdkLoaded", "onImaSdkLoaded")
+    m.sdkLoadTask.observeField("errors", "onSdkLoadErrors")
+    m.sdkLoadTask.observeField("urlData", "onUrlLoadRequested")
+    m.sdkLoadTask.observeField("adPlaying", "onAdBreak")
+    m.sdkLoadTask.observeFieldScoped("truexAdData", "onTruexAdDataReceived")
+    m.sdkLoadTask.observeField("userCancelStream", "onUserCancelStreamRequested")
+    m.sdkLoadTask.streamData = m.streamData
+    m.sdkLoadTask.video = m.videoPlayer
+    m.sdkLoadTask.control = "run"
+end sub
+
+'-----------------------------------------------------------------------------
+' Creates a ContentNode with the provided URL and starts the video player.
+' 
+' If the IMA task has a bookmarked position the video stream will seek to it.
 '
 ' Params:
-'   url as String - the URL of the stream to play
-'----------------------------------------------------------------------
+'   url as string - the URL of the stream to play
+'-----------------------------------------------------------------------------
 sub playStream(url as String)
     ? "ContentFlow::playStream(url=";url;")"
 

@@ -3,6 +3,8 @@
 ' ImaSdkTask
 '--------------------------------------------------------------------------------------------------------
 ' A background task that responds to IMA SDK events to control video player flow as advertisements play.
+'
+' Member Variables:
 '--------------------------------------------------------------------------------------------------------
 
 ' ad libraries provided by the OS
@@ -133,30 +135,23 @@ sub onStreamStarted(ad as Object)
         base64String = Mid(truexCompanion.url, 30).Replace(Chr(10), "")
 
         ' construct a JSON object (associative array) from the decoded string
-        decodedData = ParseJson(decodeBase64String(base64String))
-        ? "TRUE[X] >>> decodedData=";FormatJson(decodedData)
         ' expected decodedData template = {
         '       user_id: "string",
         '       placement_hash: "string",
         '       vast_config_url: "string"
         ' }
+        decodedData = ParseJson(decodeBase64String(base64String))
+        if decodedData = invalid then
+            ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - could not decode true[X] companion ad data, aborting..."
+        else
+            ' add the current ad break info to the data object so ContentFlow can access
+            decodedData.currentAdBreak = m.top.currentAdBreak
+            ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - decodedData=";FormatJson(decodedData)
 
-        '
-        ' [4]
-        '
-
-        ' pause the stream, which is currently playing a video ad
-        m.top.video.control = "pause"
-        ' seek past the True[X] placeholder video ad
-        m.top.video.seek = m.top.video.position + ad.duration
-
-        '
-        ' [5]
-        '
-
-        ' instantiate the True[X] renderer and register an event listener
-        decodedData.currentAdBreak = m.top.currentAdBreak
-        m.top.payload = decodedData
+            ' set true[X] ad data object for ContentFlow to handle on main thread
+            ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - setting m.top.truexAdData for consumption..."
+            m.top.truexAdData = decodedData
+        end if
     end if
 end sub
 
