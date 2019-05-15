@@ -1,20 +1,23 @@
 ' Copyright (c) 2019 true[X], Inc. All rights reserved.
-'---------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------------
 ' ContentFlow
-'---------------------------------------------------------------------------------------------
-' Uses the IMA SDK to initialize and play a media stream.
+'-----------------------------------------------------------------------------------------------------------
+' Uses the IMA SDK to initialize and play a video stream.
+'
+' Expects m.global.streamInfo to exist with the necessary video stream information.
 '
 ' Member Variables:
 '   * videoPlayer as Video - the video player that plays the content stream
-'   * streamData as roAssociativeArray - information streamManager uses to request the stream
-'---------------------------------------------------------------------------------------------
+'   * streamData as roAssociativeArray - information used by the IMA SDK to request the stream
+'   * currentAdBreak as roAssociativeArray - information about the ongoing ad break, provided by ImaSdkTask
+'   * adRenderer as TruexAdRenderer - instance of the true[X] renderer, used to present true[X] ads
+'-----------------------------------------------------------------------------------------------------------
 
 sub init()
-    ? "ContentFlow::init()"
+    ? "TRUE[X] >>> ContentFlow::init()"
 
     if m.global.streamInfo = invalid then return
 
-    m.videoPlayer = m.top.FindNode("videoPlayer")
 
     ' define the test stream
     jsonStreamInfo = ParseJson(m.global.streamInfo)[0]
@@ -25,14 +28,19 @@ sub init()
         apiKey: "",
         type: "vod"
     }
+    ' get reference to video player
+    m.videoPlayer = m.top.findNode("videoPlayer")
 
+    ? "TRUE[X] >>> ContentFlow::init() - loading IMA DAI SDK with video streamData=";m.streamData;"..."
     loadImaSdk()
 end sub
 
-function onKeyEvent(key as String, press as Boolean) as Boolean
-    ? "ContentFlow::onKeyEvent(key=";key;"press=";press.ToStr();")"
-    if not press then return false
-    return true
+'-------------------------------------------
+' Currently does not handle any key events.
+'-------------------------------------------
+function onKeyEvent(key as string, press as boolean) as boolean
+    ? "TRUE[X] >>> ContentFlow::onKeyEvent(key=";key;"press=";press.ToStr();")"
+    return press
 end function
 
 '------------------------------------------------------------------------------------------------------------
@@ -116,9 +124,10 @@ sub loadImaSdk()
 end sub
 
 sub onTruexEvent(event as object)
-    data = event.GetData()
-    if data = invalid then return
-    ? "TRUE[X] >>> ImaSdkTask::onTruexEvent(event=";data;")"
+    ? "TRUE[X] >>> ContentFlow::onTruexEvent()"
+
+    data = event.getData()
+    if data = invalid then return else ? "TRUE[X] >>> ContentFlow::onTruexEvent(event=";data;")"
 
     if data.type = "adFreePod" then
         '
@@ -138,6 +147,7 @@ sub onTruexEvent(event as object)
         '
         ' [7]
         '
+        ? "TRUE[X] >>> ContentFlow::onTruexEvent() - user requested video stream playback cancel..."
 
         ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
         ' if the user has not earned credit their content will resume at the beginning of the ad break
@@ -154,6 +164,7 @@ sub onTruexEvent(event as object)
         '
         ' [8]
         '
+        ? "TRUE[X] >>> ContentFlow::onTruexEvent() - user requested video stream playback cancel..."
         m.top.event = { trigger: "cancelStream" }
     end if
 end sub
@@ -175,22 +186,52 @@ sub onPayload()
             placement_hash: decodedData.placement_hash
         },
         supportsCancelStream: true,
-        slotType: "PREROLL"'UCase(getCurrentAdBreakSlotType())
+        slotType: UCase(getCurrentAdBreakSlotType())
     }
     m.adRenderer.action = { type: "start" }
     m.adRenderer.focusable = true
     m.adRenderer.SetFocus(true)
 end sub
 
+'-------------------------------------------------------------------------------------------------------------
+' Determines the URL string used to request a VAST config. The full URL is created by appending the following
+' URL parameters to the provided baseUrl:
+'   * network_user_id = userId, provided
+'   * stream_position = either "preroll" or "midroll" depending on ad slot
+'   * env[] = appends "brightscript" and "layoutJSON" elements to support Roku
+'
+' Params:
+'   * baseUrl as string - URL of VAST config URL parameters will be appended to
+'   * userId as string - identifier used as value for network_user_id URL parameter
+'
+' Return:
+'   full URL to use for VAST config GET request
+'-------------------------------------------------------------------------------------------------------------
 function determineVastConfigUrl(baseUrl as string, userId as string) as string
-    ? "ImaSdkTask::determineVastConfigUrl(baseUrl=";baseUrl;", userId=";userId;")"
-    baseUrl = baseUrl + "&network_user_id=" + userId
+    ? "TRUE[X] >>> ContentFlow::determineVastConfigUrl(baseUrl=";baseUrl;", userId=";userId;")"
+
+    ' prepend HTTP protocol if it's absent
     if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
-    baseUrl = baseUrl + "&stream_position=" + "preroll"'getCurrentAdBreakSlotType()
+
+    ' append URL parameters; network_user_id, stream_position, env[]
+    baseUrl = baseUrl + "&network_user_id=" + userId
+    baseUrl = baseUrl + "&stream_position=" + getCurrentAdBreakSlotType()
     baseUrl = baseUrl + "&env%5B%5D=brightscript"
     baseUrl = baseUrl + "&env%5B%5D=layoutJSON"
-    ? "VAST_CONFIG_URL=";baseUrl
+
+    ? "TRUE[X] >>> ContentFlow::determineVastConfigUrl() - URL=";baseUrl
     return baseUrl
+end function
+
+'-----------------------------------------------------------------------------------
+' Determines the current ad break's (m.currentAdBreak) slot type.
+'
+' Return:
+'   invalid if m.currentAdBreak is not set, otherwise either "midroll" or "preroll"
+'-----------------------------------------------------------------------------------
+function getCurrentAdBreakSlotType() as dynamic
+    if m.currentAdBreak = invalid then return invalid
+    if m.currentAdBreak.podindex > 0 then return "midroll" else return "preroll"
 end function
 
 '----------------------------------------------------------------------
@@ -214,5 +255,9 @@ sub playStream(url as String)
     m.videoPlayer.control = "play"
     m.videoPlayer.EnableCookies()
 
-    if m.sdkLoadTask.bookmark > 0 then m.videoPlayer.seek = m.sdkLoadTask.bookmark
+    ' check for a bookmarked position in the video stream
+    if m.sdkLoadTask.bookmark > 0 then
+        ? "TRUE[X] >>> ContentFlow::beginStream() - seeking video stream to bookmarked position..."
+        m.videoPlayer.seek = m.sdkLoadTask.bookmark
+    end if
 end sub
