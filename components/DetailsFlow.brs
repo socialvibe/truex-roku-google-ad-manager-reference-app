@@ -8,14 +8,12 @@
 ' The layout contains: a title text field for the 'TV show', a short description of the 'show', a list of
 ' 'episodes' to choose from, and a Play button.
 '
-' TODO: Ideally each 'episode' would start a unique stream.
-'
 ' Member Variables:
 '   * playButton as Button - used to begin playing content stream of selected episode
 '-------------------------------------------------------------------------------------------------------------
 
 sub init()
-    ? "DetailsFlow::init()"
+    ? "TRUE[X] >>> DetailsFlow::init()"
 
     m.rootLayout = m.top.FindNode("baseFlowLayout")
 
@@ -46,7 +44,7 @@ end function
 ' Callback triggered when Play button is selected. Starts the stream by signaling via m.top.event.
 '--------------------------------------------------------------------------------------------------
 sub onPlayButtonSelected()
-    ? "DetailsFlow::onPlayButtonSelected()"
+    ? "TRUE[X] >>> DetailsFlow::onPlayButtonSelected()"
     m.top.event = { trigger: "playButtonSelected", details: "TODO: pass selected content data" }
 end sub
 
@@ -59,7 +57,7 @@ end sub
 '------------------------------------------------------------------------------------------------------------------
 sub onImageLoaded(event as Object)
     data = event.GetData()
-    ? "DetailsFlow::onImageLoaded(event=";data;")"
+    ? "TRUE[X] >>> DetailsFlow::onImageLoaded(event=";data;")"
     if data = "ready" or data = "failed" then m.imagesLoaded = m.imagesLoaded + 1
     if m.imagesLoaded > 1 then m.rootLayout.visible = true
 end sub
