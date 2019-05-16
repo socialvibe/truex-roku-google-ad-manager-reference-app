@@ -7,6 +7,7 @@
 '
 ' Member Variables:
 '   * spinner as BusySpinner - used to indicate background work is being done
+'   * fetchStreamTask as FetchStreamInfoTask - background task to retrieve remote video stream info
 '---------------------------------------------------------------------------------------------------------
 
 sub init()
@@ -29,19 +30,28 @@ sub onSpinnerLoadStatusChanged()
     if m.spinner.poster.loadStatus = "ready" or m.spinner.poster.loadStatus = "failed" then centerLayout()
 end sub
 
-sub onStreamInfo(event as Object)
+'---------------------------------------------------------------------------------
+' Checks m.spinner's 'loadStatus', updating UI element positions once it's ready.
+'---------------------------------------------------------------------------------
+sub onStreamInfo()
     if m.fetchStreamTask.streamInfo <> invalid then
+        ? "TRUE[X] >>> LoadingFlow::onStreamInfo() - stream information recevied:";m.fetchStreamTask.streamInfo
         m.top.event = {
             trigger: "streamInfoReceived",
             streamInfo: m.fetchStreamTask.streamInfo
         }
     else
+        ? "TRUE[X] >>> LoadingFlow::onStreamInfo() - error fetching stream information..."
         m.top.error = "Failed to fetch stream info."
     end if
 end sub
 
+'---------------------------------------------------------------------------------------
+' Starts a background task that fetches video stream configuration from known endpoint.
+'---------------------------------------------------------------------------------------
 sub fetchStreamInfo()
-    ? "LoadingFlow::fetchStreamInfo()"
+    ? "TRUE[X] >>> LoadingFlow::fetchStreamInfo()"
+
     if m.fetchStreamTask = invalid then
         m.fetchStreamTask = CreateObject("roSGNode", "FetchStreamInfoTask")
         m.fetchStreamTask.ObserveField("streamInfo", "onStreamInfo")

@@ -1,4 +1,11 @@
 ' Copyright (c) 2019 true[X], Inc. All rights reserved.
+'--------------------------------------------------------------------------------------------------------
+' ImaSdkTask
+'--------------------------------------------------------------------------------------------------------
+' A background task that responds to IMA SDK events to control video player flow as advertisements play.
+'
+' Member Variables:
+'--------------------------------------------------------------------------------------------------------
 
 ' ad libraries provided by the OS
 Library "Roku_Ads.brs"
@@ -49,109 +56,61 @@ sub runLoop()
     ? "TRUE[X] >>> Exiting ImaSdkTask::runLoop()"
 end sub
 
-sub onTruexEvent(event as Object)
-    data = event.GetData()
-    if data = invalid then return
-    ? "TRUE[X] >>> ImaSdkTask::onTruexEvent(event=";data;")"
-
-    if data.type = "adFreePod" then
-        '
-        ' [6]
-        '
-
-        ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
-        m.top.video.position = m.top.currentAdBreak.timeOffset + m.top.currentAdBreak.duration
-    else if data.type = "adStarted" then
-        m.top.video.control = "pause"
-    else if data.type = "adFetchCompleted" then
-        ' now the True[X] engagement is ready to start
-    else if data.type = "optOut" then
-        ' user decided not to engage in True[X] ad, resume playback with default video ads
-        m.top.video.control = "play"
-    else if data.type = "adCompleted" then
-        '
-        ' [7]
-        '
-
-        ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
-        ' if the user has not earned credit their content will resume at the beginning of the ad break
-        m.top.video.control = "play"
-    else if data.type = "adError" then
-        ' there was a problem loading the True[X] ad, resume playback with default video ads
-        m.top.video.control = "play"
-    else if data.type = "noAdsAvailable" then
-        ' there are no True[X] ads available for the user to engage with, resume playback with default video ads
-        m.top.video.control = "play"
-    else if data.type = "cancelStream" then
-        '
-        ' [8]
-        '
-        m.top.userCancelStream = true
-    end if
-end sub
-
-    ' adTemplate = {
-    '     adbreakinfo: {},
-    '     addescription: "string",
-    '     adid: "string",
-    '     adsystem: "string",
-    '     adtitle: "string",
-    '     duration: integer,
-    '     companions: [],
-    '     wrappers: []
-    ' }
-sub onStreamStarted(ad as Object)
+' expected ad template = {
+'     adbreakinfo: {},
+'     addescription: "string",
+'     adid: "string",
+'     adsystem: "string",
+'     adtitle: "string",
+'     duration: integer,
+'     companions: [],
+'     wrappers: []
+' }
+sub onStreamStarted(ad as object)
     ? "TRUE[X] >>> ImaSdkTask::onStreamStarted()"
 
     '
     ' [2]
     '
+    ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - checking ad payload for true[X] companion..."
 
-    ' adCompanionTemplate = {
-    '       apiFramework: "string",
-    '       creativeType: "string",
-    '       height: integer,
-    '       width: Integer,
-    '       trackingEvents: {object},
-    '       url: "data:application/json;base64,[base64-encoded string]"
-    ' }
     truexCompanion = getFirstTruexCompanion(ad)
     if truexCompanion <> invalid then
-        ? "TRUE[X] >>> True[X] companion detected on ad, companion=";truexCompanion
+        ' expected truexCompanion template = {
+        '       apiFramework: "string",
+        '       creativeType: "string",
+        '       height: integer,
+        '       width: Integer,
+        '       trackingEvents: {object},
+        '       url: "data:application/json;base64,[base64-encoded string]"
+        ' }
 
         '
         ' [3]
         '
+        ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - companion detected on ad, companion=";truexCompanion
 
         ' grab the base64 part of the "url" field from the companion object
         base64String = Mid(truexCompanion.url, 30).Replace(Chr(10), "")
-        ' TODO: are there any other characters we need to replace besides newlines?
 
         ' construct a JSON object (associative array) from the decoded string
-        decodedData = ParseJson(decodeBase64String(base64String))
-        ? "TRUE[X] >>> decodedData=";FormatJson(decodedData)
-        ' decodedData template = {
+        ' expected decodedData template = {
         '       user_id: "string",
         '       placement_hash: "string",
         '       vast_config_url: "string"
         ' }
+        decodedData = ParseJson(decodeBase64String(base64String))
+        if decodedData = invalid then
+            ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - could not decode true[X] companion ad data, aborting..."
+        else
+            ' add the current ad break info to the data object so ContentFlow can access
+            decodedData.currentAdBreak = m.top.currentAdBreak
+            ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - decodedData=";FormatJson(decodedData)
 
-        '
-        ' [4]
-        '
-
-        ' pause the stream, which is currently playing a video ad
-        m.top.video.control = "pause"
-        ' seek past the True[X] placeholder video ad
-        m.top.video.seek = m.top.video.position + ad.duration
-
-        '
-        ' [5]
-        '
-
-        ' instantiate the True[X] renderer and register an event listener
-        decodedData.currentAdBreak = m.top.currentAdBreak
-        m.top.payload = decodedData
+            ' set true[X] ad data object for ContentFlow to handle on main thread
+            ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - setting m.top.truexAdData for consumption..."
+            m.top.truexAdData = decodedData
+        end if
     end if
 end sub
 
@@ -174,17 +133,6 @@ end sub
 sub onStreamError(ad as Object)
     ? "TRUE[X] >>> ImaSdkTask::onStreamError()"
 end sub
-
-function determineVastConfigUrl(baseUrl as String, userId as String) as String
-    ? "ImaSdkTask::determineVastConfigUrl(baseUrl=";baseUrl;", userId=";userId;")"
-    baseUrl = baseUrl + "&network_user_id=" + userId
-    if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
-    baseUrl = baseUrl + "&stream_position=" + getCurrentAdBreakSlotType()
-    baseUrl = baseUrl + "&env%5B%5D=brightscript"
-    baseUrl = baseUrl + "&env%5B%5D=layoutJSON"
-    ? "VAST_CONFIG_URL=";baseUrl
-    return baseUrl
-end function
 
 '---------------------------------------------------------------------------------------
 ' Uses m.top.streamData to initialize and request a content stream through the IMA SDK.
@@ -244,11 +192,6 @@ sub setupVideoPlayer()
 
     m.player.loadUrl = function(urlData)
         ? "TRUE[X] >>> ImaSdkTask::loadUrl(urlData=";urlData;")"
-        ' if m.streamManager <> invalid and m.top.streamData.type <> "live" then
-        '     m.top.bookmark = m.streamManager.GetStreamTime(m.top.bookmark * 1000)
-        ' else
-        '     m.top.bookmark = 0
-        ' end if
         m.top.video.enableTrickPlay = false
         m.top.urlData = urlData
     end function
@@ -269,17 +212,6 @@ sub setupVideoPlayer()
         m.top.video.enableTrickPlay = true
     end function
 end sub
-
-'-------------------------------------------------------------------------
-' Determines the current ad break's (m.top.currentAdBreak) slot type.
-'
-' Return:
-'   either "midroll" or "preroll", invalid if m.currentAdBreak is not set
-'-------------------------------------------------------------------------
-function getCurrentAdBreakSlotType() as Dynamic
-    if m.top.currentAdBreak = invalid then return invalid
-    if m.top.currentAdBreak.podindex > 0 then return "midroll" else return "preroll"
-end function
 
 '------------------------------------------------------------------------------------
 ' Searches ad companions for one that uses the "truex" apiFramework.
@@ -323,9 +255,9 @@ sub loadImaSdk()
     m.top.sdkLoaded = true
 end sub
 
-'-----------------------------
-' Register ad event listeners
-'-----------------------------
+'------------------------------
+' Register ad event listeners.
+'------------------------------
 sub addCallbacks()
     ? "TRUE[X] >>> ImaSdkTask::addCallbacks()"
     m.streamManager.addEventListener(m.sdk.AdEvent.ERROR, onStreamError)
