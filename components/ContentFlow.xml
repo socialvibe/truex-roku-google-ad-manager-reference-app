@@ -8,7 +8,7 @@
 -->
 <component
     name="ContentFlow"
-    extends="Group">
+    extends="BaseFlow">
 
     <script
         type="text/brightscript"

@@ -34,13 +34,17 @@ end sub
 ' Callback triggered by Flow's when their m.top.event field is set.
 '
 ' Supported triggers:
-'   * "playButtonSelected" - transition to ContentFlow
+'   * playButtonSelected - transition to ContentFlow
+'   * streamInfoReceived - populates global streamInfo field
+'   * cancelStream - transition to DetailsFlow
 '
 ' Params:
 '   * event as roSGNodeEvent - contains the Flow event data
 '-------------------------------------------------------------------
-sub onFlowEvent(event as Object)
+sub onFlowEvent(event as object)
     data = event.GetData()
+    ? "TRUE[X] >>> MainScene::onFlowEvent(trigger=";data.trigger;")"
+
     if data.trigger = "playButtonSelected" then
         showFlow("ContentFlow")
     else if data.trigger = "cancelStream" then
@@ -123,6 +127,8 @@ sub removeCurrentFlow()
 
     if m.currentFlow <> invalid then
         m.currentFlow.UnobserveField("event")
+        m.currentFlow.visible = false
+        m.currentFlow.SetFocus(false)
         m.rootLayout.RemoveChild(m.currentFlow)
         m.currentFlow = invalid
     end if
