@@ -176,7 +176,7 @@ sub onTruexEvent(event as object)
 end sub
 
 '--------------------------------------------------------------------------------------------------------
-' Callback triggered when ImaSdbTask updates its 'truexAdData' field. The following fields are expected:
+' Callback triggered when ImaSdkTask updates its 'truexAdData' field. The following fields are expected:
 '   * currentAdBreak as roAssociativeArray - current ad break information, including duration
 '   * user_id as string - the identifier used as the network_user_id parameter in the VAST config URL
 '   * vast_config_url as string - the base URL used to request the VAST config
