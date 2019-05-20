@@ -67,7 +67,7 @@ end sub
 '     wrappers: []
 ' }
 sub onStreamStarted(ad as object)
-    ? "TRUE[X] >>> ImaSdkTask::onStreamStarted()"
+    ? "TRUE[X] >>> ImaSdkTask::onStreamStarted(), ad: ";ad
 
     '
     ' [2]
@@ -104,7 +104,15 @@ sub onStreamStarted(ad as object)
             ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - could not decode true[X] companion ad data, aborting..."
         else
             ' add the current ad break info to the data object so ContentFlow can access
+            ' ensuring the placeholder video duration is subtracted out so we don't seek past the end of the pod
+            ' and into content when doing an ad akip
+            if ad.duration <> invalid then 
+                decodedData.placeholderDuration = ad.duration 
+            else 
+                decodedData.placeholderDuration = 30 
+            end if
             decodedData.currentAdBreak = m.top.currentAdBreak
+            decodedData.currentAdBreak.duration = m.top.currentAdBreak.duration - ad.duration
             ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - decodedData=";FormatJson(decodedData)
 
             ' set true[X] ad data object for ContentFlow to handle on main thread

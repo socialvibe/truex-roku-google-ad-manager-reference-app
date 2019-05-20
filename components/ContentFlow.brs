@@ -134,7 +134,8 @@ sub onTruexEvent(event as object)
         '
 
         ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
-        m.videoPlayer.seek = m.currentAdBreak.timeOffset + m.currentAdBreak.duration
+        ? "TRUE[X] >>> ContentFlow::onTruexEvent, ad skipping, current position: " ; m.videoPlayer.position ; " duration of rest of break: " ; m.currentAdBreak.duration
+        m.videoPlayer.seek = m.videoPlayer.position + m.currentAdBreak.duration
     else if data.type = "adStarted" then
         ' this event is triggered when a true[X] engagement as started
         ' that means the user was presented with a Choice Card and opted into an interactive ad
@@ -144,7 +145,6 @@ sub onTruexEvent(event as object)
     else if data.type = "optOut" then
         ' this event is triggered when a user decides not to view a true[X] interactive ad
         ' that means the user was presented with a Choice Card and opted to watch standard video ads
-        m.videoPlayer.control = "resume"
     else if data.type = "adCompleted" then
         ' this event is triggered when TruexAdRenderer is done presenting the ad
 
@@ -199,15 +199,17 @@ sub onTruexAdDataReceived(event as object)
     decodedData = event.getData()
     if decodedData = invalid then return
 
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived(), decodedData: " ; decodedData
+
     '
     ' [4]
     '
-    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - seeking video position past placeholder ad and pausing..."
+    ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - seeking video position past placeholder ad and pausing..., position: " ; m.videoPlayer.position ; " placeholderDuration: " ; decodedData.placeholderDuration
 
     ' pause the stream, which is currently playing a video ad
     m.videoPlayer.control = "pause"
     ' seek past the True[X] placeholder video ad
-    m.videoPlayer.seek = m.videoPlayer.position + decodedData.currentAdBreak.duration
+    m.videoPlayer.seek = m.videoPlayer.position + decodedData.placeholderDuration
     m.currentAdBreak = decodedData.currentAdBreak
 
     '
