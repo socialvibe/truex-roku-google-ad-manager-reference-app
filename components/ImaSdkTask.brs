@@ -105,6 +105,8 @@ sub onStreamStarted(ad as object)
         else
             ' add the current ad break info to the data object so ContentFlow can access
             decodedData.currentAdBreak = m.top.currentAdBreak
+            if ad.duration = invalid then ad.duration = 30
+            decodedData.truexAdDuration = ad.duration
             ? "TRUE[X] >>> ImaSdkTask::onStreamStarted() - decodedData=";FormatJson(decodedData)
 
             ' set true[X] ad data object for ContentFlow to handle on main thread
@@ -203,6 +205,7 @@ sub setupVideoPlayer()
         ? "TRUE[X] >>> ImaSdkTask::adBreakStarted(adBreakInfo=";adBreakInfo;")"
         m.top.currentAdBreak = adBreakInfo
         m.top.adPlaying = true
+        m.top.video.enableUi = false
         m.top.video.enableTrickPlay = false
     end function
 
