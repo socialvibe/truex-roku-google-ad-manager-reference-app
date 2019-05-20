@@ -134,17 +134,17 @@ sub onTruexEvent(event as object)
         '
 
         ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
+        m.videoPlayer.enableUi = true
+        m.videoPlayer.enableTrickPlay = true
         m.videoPlayer.seek = m.currentAdBreak.timeOffset + m.currentAdBreak.duration
     else if data.type = "adStarted" then
         ' this event is triggered when a true[X] engagement as started
         ' that means the user was presented with a Choice Card and opted into an interactive ad
-        m.videoPlayer.control = "pause"
     else if data.type = "adFetchCompleted" then
         ' this event is triggered when TruexAdRenderer receives a response to an ad fetch request
     else if data.type = "optOut" then
         ' this event is triggered when a user decides not to view a true[X] interactive ad
         ' that means the user was presented with a Choice Card and opted to watch standard video ads
-        m.videoPlayer.control = "resume"
     else if data.type = "adCompleted" then
         ' this event is triggered when TruexAdRenderer is done presenting the ad
 
@@ -154,10 +154,12 @@ sub onTruexEvent(event as object)
 
         ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
         ' if the user has not earned credit their content will resume at the beginning of the ad break
-        m.adRenderer.visible = false
         m.adRenderer.SetFocus(false)
-        m.top.SetFocus(true)
-        m.videoPlayer.control = "resume"
+        m.top.removeChild(m.adRenderer)
+        m.adRenderer.visible = false
+        m.videoPlayer.SetFocus(true)
+        m.videoPlayer.control = "play"
+        m.videoPlayer.seek = m.videoPositionAtAdBreakPause + 30
     else if data.type = "adError" then
         ' this event is triggered whenever TruexAdRenderer encounters an error
         ' usually this means the video stream should continue with normal video ads
@@ -206,8 +208,6 @@ sub onTruexAdDataReceived(event as object)
 
     ' pause the stream, which is currently playing a video ad
     m.videoPlayer.control = "pause"
-    ' seek past the True[X] placeholder video ad
-    m.videoPlayer.seek = m.videoPlayer.position + decodedData.currentAdBreak.duration
     m.currentAdBreak = decodedData.currentAdBreak
 
     '
