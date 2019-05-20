@@ -32,6 +32,11 @@ end sub
 '-------------------------------------------
 function onKeyEvent(key as string, press as boolean) as boolean
     ? "TRUE[X] >>> ContentFlow::onKeyEvent(key=";key;"press=";press.ToStr();")"
+    if not m.sdkLoadTask.adPlaying and press and key = "back" then
+        ? "TRUE[X] >>> ContentFlow::onKeyEvent() - back pressed while content is playing, requesting stream cancel..."
+        tearDown()
+        m.top.event = { trigger: "cancelStream" }
+    end if
     return press
 end function
 
@@ -94,6 +99,7 @@ end sub
 sub onUserCancelStreamRequested(event as Object)
     data = event.GetData()
     ? "TRUE[X] >>> ContentFlow::onUserCancelStreamRequested(cancelStream=";data;")"
+    tearDown()
     m.top.event = { trigger: "cancelStream" }
 end sub
 
@@ -138,7 +144,7 @@ sub onTruexEvent(event as object)
     else if data.type = "optOut" then
         ' this event is triggered when a user decides not to view a true[X] interactive ad
         ' that means the user was presented with a Choice Card and opted to watch standard video ads
-        m.videoPlayer.control = "play"
+        m.videoPlayer.control = "resume"
     else if data.type = "adCompleted" then
         ' this event is triggered when TruexAdRenderer is done presenting the ad
 
@@ -150,15 +156,16 @@ sub onTruexEvent(event as object)
         ' if the user has not earned credit their content will resume at the beginning of the ad break
         m.adRenderer.visible = false
         m.adRenderer.SetFocus(false)
-        m.videoPlayer.control = "play"
+        m.top.SetFocus(true)
+        m.videoPlayer.control = "resume"
     else if data.type = "adError" then
         ' this event is triggered whenever TruexAdRenderer encounters an error
         ' usually this means the video stream should continue with normal video ads
-        m.videoPlayer.control = "play"
+        m.videoPlayer.control = "resume"
     else if data.type = "noAdsAvailable" then
         ' this event is triggered when TruexAdRenderer receives no usable true[X] ad in the ad fetch response
         ' usually this means the video stream should continue with normal video ads
-        m.videoPlayer.control = "play"
+        m.videoPlayer.control = "resume"
     else if data.type = "cancelStream" then
         ' this event is triggered when the user performs an action interpreted as a request to end the video playback
         ' this event can be disabled by adding supportsUserCancelStream=false to the TruexAdRenderer init payload
@@ -171,6 +178,7 @@ sub onTruexEvent(event as object)
         '
 
         ? "TRUE[X] >>> ContentFlow::onTruexEvent() - user requested video stream playback cancel..."
+        tearDown()
         m.top.event = { trigger: "cancelStream" }
     end if
 end sub
@@ -320,6 +328,11 @@ sub loadImaSdk()
     m.sdkLoadTask.streamData = m.streamData
     m.sdkLoadTask.video = m.videoPlayer
     m.sdkLoadTask.control = "run"
+end sub
+
+sub tearDown()
+    if m.videoPlayer <> invalid then m.videoPlayer.control = "stop"
+    if m.sdkLoadTask <> invalid then m.sdkLoadTask.control = "stop"
 end sub
 
 '-----------------------------------------------------------------------------

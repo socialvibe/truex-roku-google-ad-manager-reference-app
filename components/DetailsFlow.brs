@@ -20,9 +20,19 @@ sub init()
     m.playButton = m.top.FindNode("playButton")
     m.playButton.ObserveField("buttonSelected", "onPlayButtonSelected")
 
-    m.imagesLoaded = 0
-    m.top.FindNode("backgroundImage").ObserveField("loadStatus", "onImageLoaded")
-    m.top.FindNode("backgroundImage2").ObserveField("loadStatus", "onImageLoaded")
+    m.numImagesLoading = 0
+    bgPoster = m.top.FindNode("backgroundImage")
+    if bgPoster.loadStatus = "loading" then
+        bgPoster.ObserveField("loadStatus", "onImageLoaded")
+        m.numImagesLoading += 1
+    end if
+    bgPoster2 = m.top.FindNode("backgroundImage")
+    if bgPoster2.loadStatus = "loading" then
+        bgPoster2.ObserveField("loadStatus", "onImageLoaded")
+        m.numImagesLoading += 1
+    end if
+
+    if m.numImagesLoading = 0 then m.top.visible = true
 
     if m.global.streamInfo = invalid then return
     streamInfo = ParseJson(m.global.streamInfo)[0]
@@ -58,8 +68,8 @@ end sub
 sub onImageLoaded(event as Object)
     data = event.GetData()
     ? "TRUE[X] >>> DetailsFlow::onImageLoaded(event=";data;")"
-    if data = "ready" or data = "failed" then m.imagesLoaded = m.imagesLoaded + 1
-    if m.imagesLoaded > 1 then m.rootLayout.visible = true
+    if data <> "loading" then m.numImagesLoading -= 1
+    if m.numImagesLoading = 0 then m.rootLayout.visible = true
 end sub
 
 '-----------------------------------------------------------------------
