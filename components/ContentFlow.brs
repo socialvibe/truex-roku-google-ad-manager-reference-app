@@ -133,10 +133,8 @@ sub onTruexEvent(event as object)
         ' [6]
         '
 
-        ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
-        m.videoPlayer.enableUi = true
-        m.videoPlayer.enableTrickPlay = true
-        m.videoPlayer.seek = m.currentAdBreak.timeOffset + m.currentAdBreak.duration
+        ' user has earned credit for the engagement, set seek duration to skip the entire ad break
+        m.streamSeekDuration = m.currentAdBreak.duration
     else if data.type = "adStarted" then
         ' this event is triggered when a true[X] engagement as started
         ' that means the user was presented with a Choice Card and opted into an interactive ad
@@ -154,20 +152,15 @@ sub onTruexEvent(event as object)
 
         ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
         ' if the user has not earned credit their content will resume at the beginning of the ad break
-        m.adRenderer.SetFocus(false)
-        m.top.removeChild(m.adRenderer)
-        m.adRenderer.visible = false
-        m.videoPlayer.SetFocus(true)
-        m.videoPlayer.control = "play"
-        m.videoPlayer.seek = m.videoPositionAtAdBreakPause + 30
+        resumeVideoStream()
     else if data.type = "adError" then
         ' this event is triggered whenever TruexAdRenderer encounters an error
         ' usually this means the video stream should continue with normal video ads
-        m.videoPlayer.control = "resume"
+        resumeVideoStream()
     else if data.type = "noAdsAvailable" then
         ' this event is triggered when TruexAdRenderer receives no usable true[X] ad in the ad fetch response
         ' usually this means the video stream should continue with normal video ads
-        m.videoPlayer.control = "resume"
+        resumeVideoStream()
     else if data.type = "cancelStream" then
         ' this event is triggered when the user performs an action interpreted as a request to end the video playback
         ' this event can be disabled by adding supportsUserCancelStream=false to the TruexAdRenderer init payload
@@ -208,7 +201,10 @@ sub onTruexAdDataReceived(event as object)
 
     ' pause the stream, which is currently playing a video ad
     m.videoPlayer.control = "pause"
+    m.videoPositionAtAdBreakPause = m.videoPlayer.position
     m.currentAdBreak = decodedData.currentAdBreak
+    ' TODO: for some reason the video only seeks when we add a literal value (+ 1)
+    m.streamSeekDuration = decodedData.truexAdDuration + 1
 
     '
     ' [5]
@@ -331,8 +327,28 @@ sub loadImaSdk()
 end sub
 
 sub tearDown()
+    destroyTruexAdRenderer()
     if m.videoPlayer <> invalid then m.videoPlayer.control = "stop"
     if m.sdkLoadTask <> invalid then m.sdkLoadTask.control = "stop"
+end sub
+
+sub destroyTruexAdRenderer()
+    if m.adRenderer <> invalid then
+        m.adRenderer.SetFocus(false)
+        m.top.removeChild(m.adRenderer)
+        m.adRenderer.visible = false
+        m.adRenderer = invalid
+    end if
+end sub
+
+sub resumeVideoStream()
+    destroyTruexAdRenderer()
+
+    if m.videoPlayer <> invalid then
+        m.videoPlayer.SetFocus(true)
+        m.videoPlayer.control = "play"
+        m.videoPlayer.seek = m.videoPositionAtAdBreakPause + m.streamSeekDuration
+    end if
 end sub
 
 '-----------------------------------------------------------------------------
