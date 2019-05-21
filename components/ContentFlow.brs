@@ -136,8 +136,7 @@ sub onTruexEvent(event as object)
         ' user has earned credit for the engagement, set seek duration to skip the entire ad break
         m.streamSeekDuration = m.currentAdBreak.duration
     else if data.type = "adStarted" then
-        ' this event is triggered when a true[X] engagement as started
-        ' that means the user was presented with a Choice Card and opted into an interactive ad
+        ' this event is triggered when the true[X] Choice Card is presented to the user
     else if data.type = "adFetchCompleted" then
         ' this event is triggered when TruexAdRenderer receives a response to an ad fetch request
     else if data.type = "optOut" then
