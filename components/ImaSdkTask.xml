@@ -40,6 +40,12 @@
         <!-- Set when user requests that the video stream be cancelled. Usually by pressing back at the Choice Card. -->
         <field id="userCancelStream" type="boolean"/>
 
+        <!-- Set when user is currently snapped back to an ad from trying to seek past it. -->
+        <field id="inSnapback" type="boolean" value="false"/>
+
+        <!-- Set when user is currently snapped back to an ad from trying to seek past it. -->
+        <field id="snapbackTime" type="integer" value="-1"/>
+
         <!-- Updated with true[X] ad companion data when found during an ad break. -->
         <field id="truexAdData" type="assocarray"/>
     </interface>
