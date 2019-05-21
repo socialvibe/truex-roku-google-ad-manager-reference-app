@@ -53,7 +53,6 @@ sub runLoop()
 
         m.streamManager.onMessage(msg)
 
-        currentContentTime = m.streamManager.getContentTime(m.top.video.position * 1000) / 1000
         currentStreamTime = m.top.video.position
         ' 2s is the seek threshold for triggering a snapback
         if Abs(currentStreamTime - m.lastVideoTime) > 2 then
