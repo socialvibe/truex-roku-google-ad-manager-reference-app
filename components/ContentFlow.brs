@@ -32,7 +32,7 @@ end sub
 '-------------------------------------------
 function onKeyEvent(key as string, press as boolean) as boolean
     ? "TRUE[X] >>> ContentFlow::onKeyEvent(key=";key;"press=";press.ToStr();")"
-    if not m.sdkLoadTask.adPlaying and press and key = "back" then
+    if press and key = "back" and m.adRenderer = invalid then
         ? "TRUE[X] >>> ContentFlow::onKeyEvent() - back pressed while content is playing, requesting stream cancel..."
         tearDown()
         m.top.event = { trigger: "cancelStream" }
@@ -133,18 +133,15 @@ sub onTruexEvent(event as object)
         ' [6]
         '
 
-        ' user has earned credit for the engagement, move content past ad break (but don't resume playback)
-        m.videoPlayer.seek = m.currentAdBreak.timeOffset + m.currentAdBreak.duration
+        ' user has earned credit for the engagement, set seek duration to skip the entire ad break
+        m.streamSeekDuration = m.currentAdBreak.duration
     else if data.type = "adStarted" then
-        ' this event is triggered when a true[X] engagement as started
-        ' that means the user was presented with a Choice Card and opted into an interactive ad
-        m.videoPlayer.control = "pause"
+        ' this event is triggered when the true[X] Choice Card is presented to the user
     else if data.type = "adFetchCompleted" then
         ' this event is triggered when TruexAdRenderer receives a response to an ad fetch request
     else if data.type = "optOut" then
         ' this event is triggered when a user decides not to view a true[X] interactive ad
         ' that means the user was presented with a Choice Card and opted to watch standard video ads
-        m.videoPlayer.control = "resume"
     else if data.type = "adCompleted" then
         ' this event is triggered when TruexAdRenderer is done presenting the ad
 
@@ -154,18 +151,15 @@ sub onTruexEvent(event as object)
 
         ' if the user earned credit (via "adFreePod") their content will already be seeked past the ad break
         ' if the user has not earned credit their content will resume at the beginning of the ad break
-        m.adRenderer.visible = false
-        m.adRenderer.SetFocus(false)
-        m.top.SetFocus(true)
-        m.videoPlayer.control = "resume"
+        resumeVideoStream()
     else if data.type = "adError" then
         ' this event is triggered whenever TruexAdRenderer encounters an error
         ' usually this means the video stream should continue with normal video ads
-        m.videoPlayer.control = "resume"
+        resumeVideoStream()
     else if data.type = "noAdsAvailable" then
         ' this event is triggered when TruexAdRenderer receives no usable true[X] ad in the ad fetch response
         ' usually this means the video stream should continue with normal video ads
-        m.videoPlayer.control = "resume"
+        resumeVideoStream()
     else if data.type = "cancelStream" then
         ' this event is triggered when the user performs an action interpreted as a request to end the video playback
         ' this event can be disabled by adding supportsUserCancelStream=false to the TruexAdRenderer init payload
@@ -206,9 +200,10 @@ sub onTruexAdDataReceived(event as object)
 
     ' pause the stream, which is currently playing a video ad
     m.videoPlayer.control = "pause"
-    ' seek past the True[X] placeholder video ad
-    m.videoPlayer.seek = m.videoPlayer.position + decodedData.currentAdBreak.duration
+    m.videoPositionAtAdBreakPause = m.videoPlayer.position
     m.currentAdBreak = decodedData.currentAdBreak
+    ' TODO: for some reason the video only seeks when we add a literal value (+ 1)
+    m.streamSeekDuration = decodedData.truexAdDuration + 1
 
     '
     ' [5]
@@ -331,8 +326,28 @@ sub loadImaSdk()
 end sub
 
 sub tearDown()
+    destroyTruexAdRenderer()
     if m.videoPlayer <> invalid then m.videoPlayer.control = "stop"
     if m.sdkLoadTask <> invalid then m.sdkLoadTask.control = "stop"
+end sub
+
+sub destroyTruexAdRenderer()
+    if m.adRenderer <> invalid then
+        m.adRenderer.SetFocus(false)
+        m.top.removeChild(m.adRenderer)
+        m.adRenderer.visible = false
+        m.adRenderer = invalid
+    end if
+end sub
+
+sub resumeVideoStream()
+    destroyTruexAdRenderer()
+
+    if m.videoPlayer <> invalid then
+        m.videoPlayer.SetFocus(true)
+        m.videoPlayer.control = "play"
+        m.videoPlayer.seek = m.videoPositionAtAdBreakPause + m.streamSeekDuration
+    end if
 end sub
 
 '-----------------------------------------------------------------------------
