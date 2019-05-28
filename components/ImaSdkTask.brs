@@ -43,6 +43,9 @@ sub runLoop()
         m.top.video.ObserveField(field, m.port)
     end for
 
+    ' track last video position to support snapback
+    m.lastVideoTime = m.top.video.position
+
     while true
         msg = Wait(1000, m.port)
         ' continue running task until video is no longer available
@@ -50,10 +53,32 @@ sub runLoop()
 
         m.streamManager.onMessage(msg)
 
+        currentStreamTime = m.top.video.position
+        ' 2s is the seek threshold for triggering a snapback
+        if Abs(currentStreamTime - m.lastVideoTime) > 2 then
+            if m.top.inSnapback then
+                m.top.inSnapback = false
+            else
+                onUserSeek(m.lastVideoTime, currentStreamTime)
+            end if
+        end if
+
         ' toggle trick play
-        m.top.video.enableTrickPlay = m.top.video.position > 3 and not m.top.adPlaying
+        m.top.video.enableTrickPlay = currentStreamTime > 3 and not m.top.adPlaying
+
+        m.lastVideoTime = currentStreamTime
     end while
     ? "TRUE[X] >>> Exiting ImaSdkTask::runLoop()"
+end sub
+
+sub onUserSeek(oldPosition as integer, newPosition as integer)
+    ? "TRUE[X] >>> ImaSdkTask::onUserSeek(oldPosition=";oldPosition;"newPosition=";newPosition")"
+    previousCuePoint = m.streamManager.getPreviousCuePoint(newPosition)
+    if previousCuePoint <> invalid and not previousCuePoint.hasPlayed then
+        m.top.video.seek = previousCuePoint.start + 1
+        m.top.snapbackTime = newPosition
+        m.top.inSnapback = true
+    end if
 end sub
 
 ' expected ad template = {
@@ -194,7 +219,6 @@ sub setupVideoPlayer()
 
     m.player.loadUrl = function(urlData)
         ? "TRUE[X] >>> ImaSdkTask::loadUrl(urlData=";urlData;")"
-        m.top.video.enableTrickPlay = false
         m.top.urlData = urlData
     end function
 
@@ -205,14 +229,15 @@ sub setupVideoPlayer()
         ? "TRUE[X] >>> ImaSdkTask::adBreakStarted(adBreakInfo=";adBreakInfo;")"
         m.top.currentAdBreak = adBreakInfo
         m.top.adPlaying = true
-        m.top.video.enableUi = false
-        m.top.video.enableTrickPlay = false
     end function
 
     m.player.adBreakEnded = function(adBreakInfo as Object)
         ? "TRUE[X] >>> ImaSdkTask::adBreakEnded(adBreakInfo=";adBreakInfo;")"
         m.top.adPlaying = false
-        m.top.video.enableTrickPlay = true
+        if m.top.snapbackTime > m.top.video.position then
+            m.top.video.seek = m.top.snapbackTime
+            m.top.snapbackTime = -1
+        end if
     end function
 end sub
 
