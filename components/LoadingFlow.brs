@@ -30,9 +30,9 @@ sub onSpinnerLoadStatusChanged()
     if m.spinner.poster.loadStatus = "ready" or m.spinner.poster.loadStatus = "failed" then centerLayout()
 end sub
 
-'---------------------------------------------------------------------------------
-' Checks m.spinner's 'loadStatus', updating UI element positions once it's ready.
-'---------------------------------------------------------------------------------
+'----------------------------------------------------------------
+' Passes response from stream info fetch request to m.top.event.
+'----------------------------------------------------------------
 sub onStreamInfo()
     if m.fetchStreamTask.streamInfo <> invalid then
         ? "TRUE[X] >>> LoadingFlow::onStreamInfo() - stream information recevied:";m.fetchStreamTask.streamInfo
@@ -42,8 +42,23 @@ sub onStreamInfo()
         }
     else
         ? "TRUE[X] >>> LoadingFlow::onStreamInfo() - error fetching stream information..."
-        m.top.error = "Failed to fetch stream info."
+        m.top.event = {
+            trigger: "noStreamInfo",
+            message: "Failed to fetch stream info."
+        }
     end if
+end sub
+
+'----------------------------------------------------------------------
+' Passes error response from stream info fetch request to m.top.event.
+'----------------------------------------------------------------------
+sub onStreamInfoError()
+    ? "TRUE[X] >>> LoadingFlow::onStreamInfo() - error fetching stream information..."
+    stop
+    m.top.event = {
+        trigger: "noStreamInfo",
+        message: "Failed to fetch stream info."
+    }
 end sub
 
 '---------------------------------------------------------------------------------------
@@ -55,6 +70,7 @@ sub fetchStreamInfo()
     if m.fetchStreamTask = invalid then
         m.fetchStreamTask = CreateObject("roSGNode", "FetchStreamInfoTask")
         m.fetchStreamTask.ObserveField("streamInfo", "onStreamInfo")
+        m.fetchStreamTask.ObserveField("error", "onStreamInfoError")
         m.fetchStreamTask.uri = "https://stash.truex.com/reference-apps/roku/config/reference-app-streams.json"
         m.fetchStreamTask.control = "run"
     end if

@@ -107,8 +107,7 @@
                     <Poster
                         id="episode1"
                         width="302"
-                        height="453"
-                        color="0xFFFFFFFF"/>
+                        height="453"/>
 
                     <Rectangle
                         id="episode2"

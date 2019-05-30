@@ -52,6 +52,9 @@ sub onFlowEvent(event as object)
     else if data.trigger = "streamInfoReceived" then
         ensureGlobalStreamInfoField(data.streamInfo)
         if m.tarLibrary.loadStatus = "ready" or m.tarLibrary.loadStatus = "failed" then showFlow("DetailsFlow")
+    else if data.trigger = "noStreamInfo" then
+        ' could not find video stream configuration
+        showFlow("DetailsFlow")
     end if
 end sub
 
