@@ -76,12 +76,14 @@ end sub
 ' Determines the next view element to focus from the given direction.
 '
 ' Params:
-'   * direction as String - the directional key (on the remote) pressed
+'   * direction as string - the directional key (on the remote) pressed
 '
 ' Return:
 '   true always
 '-----------------------------------------------------------------------
-function focusElement(direction as String) as Boolean
-    m.playButton.SetFocus(not m.playButton.HasFocus())
+function focusElement(direction as string) as boolean
+    playButtonFocus = m.playButton.HasFocus()
+    m.rootLayout.SetFocus(true)
+    m.playButton.SetFocus(not playButtonFocus)
     return true
 end function

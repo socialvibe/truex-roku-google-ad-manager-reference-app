@@ -16,7 +16,8 @@
     <children>
         <Group
             id="baseFlowLayout"
-            visible="false">
+            visible="false"
+            focusable="true">
 
             <Poster
                 id="backgroundImage"

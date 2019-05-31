@@ -46,7 +46,7 @@ sub requestStreamInfo()
                 m.top.streamInfo = response
             end if
         else
-            m.top.error = "Unrecognized event returned from AsyncGetToString(), event=" + event
+            m.top.error = "Unrecognized event returned from AsyncGetToString() - URI=" + m.top.uri
         end if
     else
         m.top.error = "httpRequest.AsyncGetToString() failed"
