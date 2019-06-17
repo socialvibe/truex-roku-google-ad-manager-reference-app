@@ -17,11 +17,11 @@ sub init()
     ? "TRUE[X] >>> MainScene::init()"
 
     ' grab a reference to the root layout node, which will be the parent layout for all nodes
-    m.rootLayout = m.top.FindNode("rootLayout")
+    m.rootLayout = m.top.findNode("rootLayout")
 
     ' listen for Truex library load events
-    m.tarLibrary = m.top.FindNode("TruexAdRendererLib")
-    m.tarLibrary.ObserveField("loadStatus", "onTruexLibraryLoadStatusChanged")
+    m.tarLibrary = m.top.findNode("TruexAdRendererLib")
+    m.tarLibrary.observeField("loadStatus", "onTruexLibraryLoadStatusChanged")
 
     ' create/set global fields with Channel dimensions (m.global.channelWidth/channelHeight)
     setChannelWidthHeightFromRootScene()
@@ -50,7 +50,7 @@ sub onFlowEvent(event as object)
     else if data.trigger = "cancelStream" then
         showFlow("DetailsFlow")
     else if data.trigger = "streamInfoReceived" then
-        ensureGlobalStreamInfoField(data.streamInfo)
+        setGlobalField("streamInfo", data.streamInfo)
         if m.tarLibrary.loadStatus = "ready" or m.tarLibrary.loadStatus = "failed" then showFlow("DetailsFlow")
     end if
 end sub
