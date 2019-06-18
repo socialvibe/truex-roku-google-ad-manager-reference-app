@@ -18,7 +18,7 @@ sub setChannelWidthHeightFromRootScene()
     channelHeight = 1080
 
     ' overwrite defaults using Scene.currentDesignResolution values, if available
-    if m.top.GetScene() <> invalid then designResolution = m.top.GetScene().currentDesignResolution
+    if m.top.getScene() <> invalid then designResolution = m.top.getScene().currentDesignResolution
     if designResolution <> invalid then
         ? "TRUE[X] >>> GlobalUtils::setChannelWidthHeightFromRootScene() - setting from Scene's design resolution..."
         channelWidth = designResolution.width
@@ -26,31 +26,26 @@ sub setChannelWidthHeightFromRootScene()
     end if
 
     ' safely set the m.global channelWidth and channelHeight fields
-    ensureGlobalChannelResolutionField(channelWidth, channelHeight)
+    setGlobalField("channelWidth", channelWidth)
+    setGlobalField("channelHeight", channelHeight)
 end sub
 
-'-----------------------------------------------------------------------------------------------------
-' Safely sets the channelWidth and channelHeight fields on m.global, adding them if they don't exist.
+'---------------------------------------------------------------------------------------------------------
+' Safely sets the value of a field in m.global, adding it explicitly (via addFields) if it doesn't exist.
 '
 ' Params:
-'   * width=1920 as integer - value to use for m.global.channelWidth
-'   * height=1920 as integer - value to use for m.global.channelHeight
-'-----------------------------------------------------------------------------------------------------
-sub ensureGlobalChannelResolutionField(width=1920 as integer, height=1080 as integer)
-    ? "TRUE[X] >>> GlobalUtils::ensureGlobalChannelResolutionField(width=";width;", height=";height;")"
-    if not m.global.HasField("channelWidth") then m.global.AddFields({ channelWidth: width, channelHeight: height })
-    m.global.channelWidth = width
-    m.global.channelHeight = height
-end sub
+'   * fieldName as string - name of the field that will take the fieldValue
+'   * fieldValue as dynamic - value of the global field, use invalid to remove a field
+'---------------------------------------------------------------------------------------------------------
+sub setGlobalField(fieldName as string, fieldValue as dynamic)
+    ? "TRUE[X] >>> GlobalUtils::setGlobalField(fieldName=";fieldName;", fieldValue=";fieldValue;")"
 
-'------------------------------------------------------------------------------
-' Safely sets the streamInfo field on m.global, adding it if it doesn't exist.
-'
-' Params:
-'   * streamInfo="" as string - value to use for m.global.streamInfo
-'------------------------------------------------------------------------------
-sub ensureGlobalStreamInfoField(streamInfo="" as string)
-    ? "TRUE[X] >>> GlobalUtils::ensureGlobalStreamInfoField(streamInfo=";streamInfo;")"
-    if not m.global.HasField("streamInfo") then m.global.AddFields({ streamInfo: streamInfo })
-    m.global.streamInfo = streamInfo
+    if not m.global.hasField(fieldName) then
+        ? "TRUE[X] >>> GlobalUtils::setGlobalField() - adding ";fieldName;" to m.global..."
+        newField = {}
+        newField[fieldName] = fieldValue
+        m.global.addFields(newField)
+    else
+        ? "TRUE[X] >>> GlobalUtils::setGlobalField() - updating existing field (";fieldName;") in m.global..."
+    end if
 end sub

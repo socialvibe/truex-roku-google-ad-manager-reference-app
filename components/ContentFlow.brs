@@ -287,13 +287,19 @@ function determineVastConfigUrl(baseUrl as string, userId as string) as string
     if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
 
     ' append URL parameters; network_user_id, stream_position, env[]
-    baseUrl = baseUrl + "&network_user_id=" + userId
+    baseUrl = baseUrl + "&network_user_id=" + getClientAdvertisingId()
     baseUrl = baseUrl + "&stream_position=" + getCurrentAdBreakSlotType()
     baseUrl = baseUrl + "&env%5B%5D=brightscript"
     baseUrl = baseUrl + "&env%5B%5D=layoutJSON"
 
     ? "TRUE[X] >>> ContentFlow::determineVastConfigUrl() - URL=";baseUrl
     return baseUrl
+end function
+
+function getClientAdvertisingId() as string
+    deviceInfo = CreateObject("roDeviceInfo")
+    if deviceInfo.IsRIDADisabled() then return "optOut"
+    return deviceInfo.GetRIDA()
 end function
 
 '-----------------------------------------------------------------------------------
