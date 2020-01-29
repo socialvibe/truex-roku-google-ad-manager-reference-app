@@ -42,6 +42,7 @@ sub init()
     if streamDesc <> invalid then m.top.FindNode("detailsFlowDescription").text = streamDesc
     streamCover = streamInfo.cover
     if streamCover <> invalid then m.top.FindNode("episode1").uri = streamCover
+    if m.numImagesLoading <= 0 then m.rootLayout.visible = true
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
