@@ -7,6 +7,8 @@ minor_version=0
 build_version=0001
 ui_resolutions=fhd
 bs_libs_required=roku_ads_lib,googleima3
+supports_input_launch=1
+rsg_version=1.2
 
 ##   Channel Assets
 ###  Main Menu Icons / Channel Poster Artwork
