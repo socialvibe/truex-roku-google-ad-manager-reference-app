@@ -218,7 +218,7 @@ sub onTruexAdDataReceived(event as object)
     tarInitAction = {
         type: "init",
         adParameters: {
-            vast_config_url: determineVastConfigUrl(decodedData.vast_config_url, decodedData.user_id),
+            vast_config_url: determineVastConfigUrl(decodedData.vast_config_url),
             placement_hash: decodedData.placement_hash
         },
         supportsCancelStream: true, ' enables cancelStream event types, disable if Channel does not support
@@ -267,30 +267,20 @@ function unpackStreamInformation() as boolean
 end function
 
 '-------------------------------------------------------------------------------------------------------------
-' Determines the URL string used to request a VAST config. The full URL is created by appending the following
-' URL parameters to the provided baseUrl:
-'   * network_user_id = userId, provided
-'   * stream_position = either "preroll" or "midroll" depending on ad slot
-'   * env[] = appends "brightscript" and "layoutJSON" elements to support Roku
+' Determines the URL string used to request a VAST config. This is typically passed through from the 
+' ad parameters stored in the VAST payload or companion ad.
 '
 ' Params:
 '   * baseUrl as string - URL of VAST config URL parameters will be appended to
-'   * userId as string - identifier used as value for network_user_id URL parameter
 '
 ' Return:
 '   full URL to use for VAST config GET request
 '-------------------------------------------------------------------------------------------------------------
-function determineVastConfigUrl(baseUrl as string, userId as string) as string
+function determineVastConfigUrl(baseUrl as string) as string
     ? "TRUE[X] >>> ContentFlow::determineVastConfigUrl(baseUrl=";baseUrl;", userId=";userId;")"
 
     ' prepend HTTP protocol if it's absent
     if Left(baseUrl, 4) <> "http" then baseUrl = "https://" + baseUrl
-
-    ' append URL parameters; network_user_id, stream_position, env[]
-    baseUrl = baseUrl + "&network_user_id=" + getClientAdvertisingId()
-    baseUrl = baseUrl + "&stream_position=" + getCurrentAdBreakSlotType()
-    baseUrl = baseUrl + "&env%5B%5D=brightscript"
-    baseUrl = baseUrl + "&env%5B%5D=layoutJSON"
 
     ? "TRUE[X] >>> ContentFlow::determineVastConfigUrl() - URL=";baseUrl
     return baseUrl
