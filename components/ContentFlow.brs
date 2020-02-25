@@ -228,6 +228,8 @@ sub onTruexAdDataReceived(event as object)
     m.adRenderer.action = tarInitAction
 
     ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - starting TruexAdRenderer..."
+    ' CTV-1745 - must stop the video player since Roku only allows one Video stream to buffer
+    m.videoPlayer.control = "stop"
     m.adRenderer.action = { type: "start" }
     m.adRenderer.focusable = true
     m.adRenderer.SetFocus(true)
