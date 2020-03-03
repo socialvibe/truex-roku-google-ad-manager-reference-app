@@ -3,8 +3,8 @@
 ##   Channel Details
 title=TAR-Roku-Reference
 major_version=1
-minor_version=0
-build_version=0002
+minor_version=1
+build_version=0000
 ui_resolutions=fhd
 bs_libs_required=roku_ads_lib,googleima3
 supports_input_launch=1
