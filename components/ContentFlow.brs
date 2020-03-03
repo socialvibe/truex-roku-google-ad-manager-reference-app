@@ -222,7 +222,10 @@ sub onTruexAdDataReceived(event as object)
             placement_hash: decodedData.placement_hash
         },
         supportsCancelStream: true, ' enables cancelStream event types, disable if Channel does not support
-        slotType: UCase(getCurrentAdBreakSlotType())
+        slotType: UCase(getCurrentAdBreakSlotType()),
+        logLevel: 5, ' Optional parameter, set the verbosity of true[X] logging, from 0 (mute) to 5 (verbose), defaults to 5
+        channelWidth: 1920, ' Optional parameter, set the width in pixels of the channel's interface, defaults to 1920
+        channelHeight: 1080 ' Optional parameter, set the height in pixels of the channel's interface, defaults to 1080
     }
     ? "TRUE[X] >>> ContentFlow::onTruexAdDataReceived() - initializing TruexAdRenderer with action=";tarInitAction
     m.adRenderer.action = tarInitAction
