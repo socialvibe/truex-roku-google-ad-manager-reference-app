@@ -114,7 +114,7 @@ end sub
 '   * adCompleted - user has finished the true[X] engagement, resume the video stream
 '   * adError - TruexAdRenderer encountered an error presenting the ad, resume with standard ads
 '   * noAdsAvailable - TruexAdRenderer has no ads ready to present, resume with standard ads
-'   * cancelStream - user has requested the video stream be stopped
+'   * userCancelStream - user has requested the video stream be stopped
 '
 ' Params:
 '   * event as roAssociativeArray - contains the TruexAdRenderer event data
@@ -160,7 +160,7 @@ sub onTruexEvent(event as object)
         ' this event is triggered when TruexAdRenderer receives no usable true[X] ad in the ad fetch response
         ' usually this means the video stream should continue with normal video ads
         resumeVideoStream()
-    else if data.type = "cancelStream" then
+    else if data.type = "userCancelStream" then
         ' this event is triggered when the user performs an action interpreted as a request to end the video playback
         ' this event can be disabled by adding supportsUserCancelStream=false to the TruexAdRenderer init payload
         ' there are two circumstances where this occurs:
@@ -221,7 +221,7 @@ sub onTruexAdDataReceived(event as object)
             vast_config_url: determineVastConfigUrl(decodedData.vast_config_url),
             placement_hash: decodedData.placement_hash
         },
-        supportsCancelStream: true, ' enables cancelStream event types, disable if Channel does not support
+        supportsUserCancelStream: true, ' enables cancelStream event types, disable if Channel does not support
         slotType: UCase(getCurrentAdBreakSlotType()),
         logLevel: 5, ' Optional parameter, set the verbosity of true[X] logging, from 0 (mute) to 5 (verbose), defaults to 5
         channelWidth: 1920, ' Optional parameter, set the width in pixels of the channel's interface, defaults to 1920
