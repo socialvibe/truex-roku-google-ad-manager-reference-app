@@ -221,7 +221,7 @@ sub onTruexAdDataReceived(event as object)
             vast_config_url: determineVastConfigUrl(decodedData.vast_config_url),
             placement_hash: decodedData.placement_hash
         },
-        supportsUserCancelStream: true, ' enables cancelStream event types, disable if Channel does not support
+        supportsUserCancelStream: true, ' enables userCancelStream event types, disable if Channel does not support
         slotType: UCase(getCurrentAdBreakSlotType()),
         logLevel: 5, ' Optional parameter, set the verbosity of true[X] logging, from 0 (mute) to 5 (verbose), defaults to 5
         channelWidth: 1920, ' Optional parameter, set the width in pixels of the channel's interface, defaults to 1920
