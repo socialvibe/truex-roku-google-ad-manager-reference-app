@@ -1,11 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## v1.1.2
+* Updated to v1 of the TruexAdRenderer (will automatically pick up minor updates from then on)
+
 ## v1.1.1
 * Fixed `userCancelStream` functionality
 
 ## v1.1.0
-* Updated to v1.1 of the TruexAdRenderer
+* Updated to v1.1.0 of the TruexAdRenderer
 
 ## v1.0.3
 * Updated to v1.0.4 of the TruexAdRenderer
