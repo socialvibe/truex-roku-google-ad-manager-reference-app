@@ -75,5 +75,5 @@ The remaining work is to resume playback.
 ## [8] - Respond to stream cancellation
 
 It's possible the viewer will decide to exit the stream while the true[X] engagement
-is ongoing. In this case, the renderer will trigger the `type: cancelStream` event.
+is ongoing. In this case, the renderer will trigger the `type: userCancelStream` event.
 In a real app, this would likely return to an episode list screen.
