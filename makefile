@@ -23,5 +23,5 @@ deploy: $(APPNAME)
 	echo $$MINOR ;\
 	echo $$BUILD_NUM ;\
 	echo $$BUILD_HASH ;\
-	sed -i "s/ComponentLibrary(\s*)id=\"TruexAdRendererLib\"(\s*)uri=\".*\"/ComponentLibrary(\s*)id=\"TruexAdRendererLib\"(\s*)uri=\"http://@{S3_BUCKET}roku/v${MAJOR}_${MINOR}/${RC_DEVELOP}/${LIBNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.pkg"/g" components/MainScene.xml ;\
+	sed -i 's/ComponentLibrary(\s*)id=\"TruexAdRendererLib\"(\s*)uri=\".*\"/ComponentLibrary(\s*)id=\"TruexAdRendererLib\"(\s*)uri=\"http://@{S3_BUCKET}roku/v${MAJOR}_${MINOR}/${RC_DEVELOP}/${LIBNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.pkg\"/g' components/MainScene.xml ;\
 	aws s3 cp dist/apps/${APPNAME}.zip s3://$$S3_BUCKET/roku/v${MAJOR}_${MINOR}/${RC_DEVELOP}/${APPNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.zip --acl public-read ;\
