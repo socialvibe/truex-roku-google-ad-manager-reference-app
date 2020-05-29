@@ -13,8 +13,6 @@ ZIP_EXCLUDE = -x *.sh -x makefile -x dist\* -x *app.mk* -x *README* -x *rokuTarg
 APPSROOT = .
 include $(APPSROOT)/app.mk
 
-SED_PARAMS = s/ComponentLibrary id=\"TruexAdRendererLib\" uri=\".*\"/ComponentLibrary id=\"TruexAdRendererLib\" uri=\"http:\/\/${S3_BUCKET}roku\/v${MAJOR}_${MINOR}\/${RC_DEVELOP}\/${LIBNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.pkg\"/
-
 # deploy `TruexReferenceApp` side-load capable zip file to s3
 # append the major, minor then rc or develop components to the upload path.
 # Note: the APPNAME, MAJOR, MINOR, BUILD_NUM, BUILD_HASH env variables are set upstream by the Jenkins system (TAR's Jenkinsfile)
@@ -25,5 +23,5 @@ deploy: $(APPNAME)
 	echo $$MINOR ;\
 	echo $$BUILD_NUM ;\
 	echo $$BUILD_HASH ;\
-	sed -i '' '${SED_PARAMS}' ./components/MainScene.xml ;\
+	sed -i '' 's/ComponentLibrary id=\"TruexAdRendererLib\" uri=\".*\"/ComponentLibrary id=\"TruexAdRendererLib\" uri=\"http:\/\/${S3_BUCKET}roku\/v${MAJOR}_${MINOR}\/${RC_DEVELOP}\/${LIBNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.pkg\"/' ./components/MainScene.xml ;\
 	aws s3 cp dist/apps/${APPNAME}.zip s3://$$S3_BUCKET/roku/v${MAJOR}_${MINOR}/${RC_DEVELOP}/${APPNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.zip --acl public-read ;\
