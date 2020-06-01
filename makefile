@@ -14,7 +14,7 @@ APPSROOT = .
 include $(APPSROOT)/app.mk
 
 update_truex_lib_uri:
-	sed -i '' 's/ComponentLibrary id=\"TruexAdRendererLib\" uri=\".*\"/ComponentLibrary id=\"TruexAdRendererLib\" uri=\"http:\/\/ctv.truex.com\/roku\/v${MAJOR}_${MINOR}\/${RC_DEVELOP}\/${LIBNAME}-${RC_DEVELOP}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.pkg\"/' ./components/MainScene.xml ;\
+	sed -i '' 's/ComponentLibrary id=\"TruexAdRendererLib\" uri=\".*\"/ComponentLibrary id=\"TruexAdRendererLib\" uri=\"http:\/\/ctv.truex.com\/roku\/v${MAJOR}_${MINOR}\/${RC_DEVELOP}\/${LIBNAME}-v${MAJOR}.${MINOR}.${BUILD_NUM}-${BUILD_HASH}.pkg\"/' ./components/MainScene.xml ;\
 
 # deploy `TruexReferenceApp` side-load capable zip file to s3
 # append the major, minor then rc or develop components to the upload path.
