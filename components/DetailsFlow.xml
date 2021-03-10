@@ -88,9 +88,11 @@
                     maxWidth="354"
                     showFocusFootprint="true"
                     focusFootprintBitmapUri="pkg:/images/play_button_fhd.png"
-                    focusBitmapUri="pkg:/images/play_button_fhd.png"
+                    focusBitmapUri="pkg:/images/play_button_focused_fhd.png"
                     focusable="true"
-                    textColor="0x000000FF">
+                    iconUri=""
+                    focusedIconUri=""
+                    textColor="0x00000000">
 
                     <Font
                         id="detailsFlowButtonFont"
