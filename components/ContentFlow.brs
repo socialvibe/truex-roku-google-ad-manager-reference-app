@@ -348,6 +348,8 @@ sub resumeVideoStream()
         m.videoPlayer.SetFocus(true)
         m.videoPlayer.control = "play"
         m.videoPlayer.seek = m.videoPositionAtAdBreakPause + m.streamSeekDuration
+        ' Add 1 second to avoid resuming too early, potentially due to rounding issues
+        m.videoPlayer.seek = m.videoPositionAtAdBreakPause + m.streamSeekDuration + 1 
     end if
 end sub
 
@@ -368,6 +370,7 @@ sub beginStream(url as string)
     videoContent.streamFormat = "hls"
     videoContent.playStart = 0
 
+    m.videoPlayer.seekMode = "accurate"  ' Helps avoid early timestamp when resuming from ad credit
     m.videoPlayer.content = videoContent
     m.videoPlayer.SetFocus(true)
     m.videoPlayer.visible = true
