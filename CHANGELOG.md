@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## v1.3.0
+* Fixed a bug that caused seek to be 1 second more than needed after playback resume from ad.
+* Fixed a bug that caused seek to occur twice when resuming content playback from ad.
+
 ## v1.1.2
 * Updated to v1 of the TruexAdRenderer (will automatically pick up minor updates from then on)
 
