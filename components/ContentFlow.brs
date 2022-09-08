@@ -202,8 +202,7 @@ sub onTruexAdDataReceived(event as object)
     m.videoPlayer.control = "pause"
     m.videoPositionAtAdBreakPause = m.videoPlayer.position
     m.currentAdBreak = decodedData.currentAdBreak
-    ' TODO: for some reason the video only seeks when we add a literal value (+ 1)
-    m.streamSeekDuration = decodedData.truexAdDuration + 1
+    m.streamSeekDuration = decodedData.truexAdDuration
 
     '
     ' [5]
@@ -347,7 +346,6 @@ sub resumeVideoStream()
     if m.videoPlayer <> invalid then
         m.videoPlayer.SetFocus(true)
         m.videoPlayer.control = "play"
-        m.videoPlayer.seek = m.videoPositionAtAdBreakPause + m.streamSeekDuration
         ' Add 1 second to avoid resuming too early, potentially due to rounding issues
         m.videoPlayer.seek = m.videoPositionAtAdBreakPause + m.streamSeekDuration + 1 
     end if
