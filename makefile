@@ -12,4 +12,5 @@ include $(APPSROOT)/app.mk
 
 .PHONY: update_truex_lib_uri
 update_truex_lib_uri:
-	sed -i '' 's|ComponentLibrary id="TruexAdRendererLib" uri=".*"|ComponentLibrary id="TruexAdRendererLib" uri="$(TRUEX_LIB_URI)"|' ./components/MainScene.xml
+	sed -i.back 's|ComponentLibrary id="TruexAdRendererLib" uri=".*"|ComponentLibrary id="TruexAdRendererLib" uri="$(TRUEX_LIB_URI)"|' ./components/MainScene.xml && \
+	rm -rf './components/MainScene.xml.back'
