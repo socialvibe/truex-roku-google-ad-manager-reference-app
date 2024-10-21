@@ -1,6 +1,6 @@
 # Copyright (c) 2019 true[X], Inc. All rights reserved.
 
-APPNAME = TruexReferenceApp
+APPNAME = truex-roku-gam-reference-app
 IMPORTS =
 ROKU_TEST_ID = 1
 ROKU_TEST_WAIT_DURATION = 5
