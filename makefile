@@ -1,6 +1,6 @@
 # Copyright (c) 2019 true[X], Inc. All rights reserved.
 
-APPNAME = TruexReferenceApp
+APPNAME = truex-roku-gam-reference-app
 IMPORTS =
 ROKU_TEST_ID = 1
 ROKU_TEST_WAIT_DURATION = 5
@@ -12,4 +12,5 @@ include $(APPSROOT)/app.mk
 
 .PHONY: update_truex_lib_uri
 update_truex_lib_uri:
-	sed -i '' 's|ComponentLibrary id="TruexAdRendererLib" uri=".*"|ComponentLibrary id="TruexAdRendererLib" uri="$(TRUEX_LIB_URI)"|' ./components/MainScene.xml
+	sed -i.back 's|ComponentLibrary id="TruexAdRendererLib" uri=".*"|ComponentLibrary id="TruexAdRendererLib" uri="$(TRUEX_LIB_URI)"|' ./components/MainScene.xml && \
+	rm -rf './components/MainScene.xml.back'
